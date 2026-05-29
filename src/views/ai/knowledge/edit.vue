@@ -1,0 +1,214 @@
+<template>
+  <div class="knowledge-edit-page">
+    <el-card shadow="never">
+      <template #header>
+        <div class="card-header">
+          <span>{{ isEdit ? '编辑知识' : '新增知识' }}</span>
+          <el-button @click="goBack">返回</el-button>
+        </div>
+      </template>
+
+      <el-form
+        ref="formRef"
+        :model="form"
+        :rules="rules"
+        label-width="100px"
+        style="max-width: 960px"
+      >
+        <el-form-item label="分类" prop="categoryId">
+          <el-select v-model="form.categoryId" placeholder="请选择分类" style="width: 100%">
+            <el-option v-for="cat in categories" :key="cat.id" :label="cat.name" :value="cat.id" />
+          </el-select>
+        </el-form-item>
+
+        <el-form-item label="标题" prop="title">
+          <el-input v-model="form.title" placeholder="请输入标题" maxlength="200" show-word-limit />
+        </el-form-item>
+
+        <el-form-item label="内容" prop="content">
+          <MdEditor v-model="form.content" style="height: 480px" />
+        </el-form-item>
+
+        <el-form-item label="标签">
+          <div class="tag-input-area">
+            <el-tag
+              v-for="tag in form.tags"
+              :key="tag"
+              closable
+              class="tag-item"
+              @close="removeTag(tag)"
+            >
+              {{ tag }}
+            </el-tag>
+            <el-input
+              v-if="tagInputVisible"
+              ref="tagInputRef"
+              v-model="tagInputValue"
+              size="small"
+              class="tag-input"
+              @keyup.enter="addTag"
+              @blur="addTag"
+            />
+            <el-button v-else size="small" @click="showTagInput">+ 添加标签</el-button>
+          </div>
+        </el-form-item>
+
+        <el-form-item label="来源">
+          <el-input v-model="form.source" placeholder="知识来源（如：书籍、网站等）" />
+        </el-form-item>
+
+        <el-form-item label="状态">
+          <el-switch
+            v-model="form.enabled"
+            active-text="启用"
+            inactive-text="禁用"
+          />
+        </el-form-item>
+
+        <el-form-item>
+          <el-button type="primary" :loading="submitting" @click="handleSubmit">保存</el-button>
+          <el-button @click="goBack">取消</el-button>
+        </el-form-item>
+      </el-form>
+    </el-card>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref, reactive, computed, onMounted, nextTick } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { ElMessage } from 'element-plus'
+import { MdEditor } from 'md-editor-v3'
+import 'md-editor-v3/lib/style.css'
+import { knowledgeApi } from '@/api/ai/knowledge'
+import type { FormInstance, InputInstance } from 'element-plus'
+
+interface Category {
+  id: number
+  name: string
+  code: string
+}
+
+const route = useRoute()
+const router = useRouter()
+const formRef = ref<FormInstance>()
+const tagInputRef = ref<InputInstance>()
+const tagInputVisible = ref(false)
+const tagInputValue = ref('')
+const submitting = ref(false)
+const categories = ref<Category[]>([])
+
+const isEdit = computed(() => !!route.params.id)
+
+const form = reactive({
+  categoryId: '',
+  title: '',
+  content: '',
+  tags: [] as string[],
+  source: '',
+  enabled: true,
+})
+
+const rules = {
+  categoryId: [{ required: true, message: '请选择分类', trigger: 'change' }],
+  title: [{ required: true, message: '请输入标题', trigger: 'blur' }],
+  content: [{ required: true, message: '请输入内容', trigger: 'blur' }],
+}
+
+function showTagInput() {
+  tagInputVisible.value = true
+  nextTick(() => tagInputRef.value?.focus())
+}
+
+function addTag() {
+  const val = tagInputValue.value.trim()
+  if (val && !form.tags.includes(val)) {
+    form.tags.push(val)
+  }
+  tagInputVisible.value = false
+  tagInputValue.value = ''
+}
+
+function removeTag(tag: string) {
+  form.tags = form.tags.filter((t) => t !== tag)
+}
+
+async function loadCategories() {
+  const res = (await knowledgeApi.getCategories()) as unknown as { data: Category[] }
+  categories.value = res.data || []
+}
+
+async function loadDetail() {
+  if (!route.params.id) return
+  const res = (await knowledgeApi.detail(Number(route.params.id))) as unknown as {
+    data: { categoryId: number; title: string; content: string; tags: string[]; source: string; enabled: boolean }
+  }
+  const d = res.data
+  form.categoryId = String(d.categoryId)
+  form.title = d.title
+  form.content = d.content
+  form.tags = d.tags || []
+  form.source = d.source || ''
+  form.enabled = d.enabled
+}
+
+async function handleSubmit() {
+  const valid = await formRef.value?.validate().catch(() => false)
+  if (!valid) return
+
+  submitting.value = true
+  try {
+    const payload = { ...form }
+    if (isEdit.value) {
+      await knowledgeApi.update(Number(route.params.id), payload)
+      ElMessage.success('更新成功')
+    } else {
+      await knowledgeApi.create(payload)
+      ElMessage.success('创建成功')
+    }
+    router.push('/ai/knowledge')
+  } catch {
+    ElMessage.error('保存失败')
+  } finally {
+    submitting.value = false
+  }
+}
+
+function goBack() {
+  router.push('/ai/knowledge')
+}
+
+onMounted(async () => {
+  await loadCategories()
+  if (isEdit.value) {
+    await loadDetail()
+  }
+})
+</script>
+
+<style lang="scss" scoped>
+.knowledge-edit-page {
+  padding: 16px;
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.tag-input-area {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.tag-item {
+  margin: 0;
+}
+
+.tag-input {
+  width: 120px;
+}
+</style>

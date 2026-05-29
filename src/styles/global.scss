@@ -1,0 +1,115 @@
+@use 'variables' as *;
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body, #app {
+  height: 100%;
+  font-family: 'PingFang SC', 'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 14px;
+  color: $text-primary;
+  background-color: $bg-color;
+}
+
+a {
+  color: $primary-color;
+  text-decoration: none;
+}
+
+// Scrollbar
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-track {
+  background-color: transparent;
+}
+
+// Page container
+.app-container {
+  padding: 20px;
+}
+
+// Filter bar
+.filter-bar {
+  margin-bottom: 16px;
+  padding: 16px;
+  background: $bg-white;
+  border-radius: 4px;
+  border: 1px solid $border-light;
+}
+
+// Table card
+.table-card {
+  padding: 16px;
+  background: $bg-white;
+  border-radius: 4px;
+  border: 1px solid $border-light;
+}
+
+// Batch action bar
+.batch-action-bar {
+  position: fixed;
+  bottom: 0;
+  left: $sidebar-width;
+  right: 0;
+  height: 56px;
+  background: $bg-white;
+  border-top: 1px solid $border-color;
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  z-index: 100;
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.06);
+
+  &.collapsed {
+    left: $sidebar-collapsed-width;
+  }
+}
+
+// Status tags
+.status-enabled {
+  color: $success-color;
+}
+
+.status-disabled {
+  color: $danger-color;
+}
+
+// AI module accent
+.ai-module {
+  .el-card__header,
+  .page-header {
+    border-left: 3px solid $ai-color;
+  }
+}
+
+// Empty state
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  color: $text-secondary;
+
+  .empty-icon {
+    font-size: 64px;
+    margin-bottom: 16px;
+    opacity: 0.3;
+  }
+
+  .empty-text {
+    font-size: 14px;
+    margin-bottom: 16px;
+  }
+}

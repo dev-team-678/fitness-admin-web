@@ -1,0 +1,235 @@
+<template>
+  <div class="community-posts">
+    <el-card shadow="never" class="filter-card">
+      <el-form :inline="true" :model="filters">
+        <el-form-item label="状态">
+          <el-select v-model="filters.status" placeholder="全部" clearable style="width: 120px">
+            <el-option label="待审核" :value="0" />
+            <el-option label="已通过" :value="1" />
+            <el-option label="已拒绝" :value="2" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="日期范围">
+          <el-date-picker
+            v-model="dateRange"
+            type="daterange"
+            range-separator="至"
+            start-placeholder="开始日期"
+            end-placeholder="结束日期"
+            value-format="YYYY-MM-DD"
+          />
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" @click="handleSearch">查询</el-button>
+          <el-button @click="handleReset">重置</el-button>
+        </el-form-item>
+      </el-form>
+    </el-card>
+
+    <el-card shadow="never">
+      <el-table :data="tableData" v-loading="loading" stripe border>
+        <el-table-column prop="content" label="内容" min-width="220" show-overflow-tooltip />
+        <el-table-column prop="userName" label="用户" width="100" />
+        <el-table-column prop="images" label="图片" width="100">
+          <template #default="{ row }">
+            <el-image
+              v-if="row.images && row.images.length > 0"
+              :src="row.images[0]"
+              style="width: 48px; height: 48px"
+              fit="cover"
+              :preview-src-list="row.images"
+              preview-teleported
+            />
+            <span v-else>--</span>
+          </template>
+        </el-table-column>
+        <el-table-column prop="likeCount" label="点赞" width="70" sortable />
+        <el-table-column prop="commentCount" label="评论" width="70" sortable />
+        <el-table-column prop="status" label="状态" width="90">
+          <template #default="{ row }">
+            <el-tag :type="statusTagType[row.status as number]" size="small">
+              {{ statusMap[row.status as number] || '未知' }}
+            </el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column prop="pinned" label="置顶" width="70">
+          <template #default="{ row }">
+            <el-tag v-if="row.pinned" type="warning" size="small">置顶</el-tag>
+            <span v-else>--</span>
+          </template>
+        </el-table-column>
+        <el-table-column prop="createdAt" label="发布时间" width="160" />
+        <el-table-column label="操作" width="220" fixed="right">
+          <template #default="{ row }">
+            <el-button
+              v-if="row.status === 0"
+              type="success"
+              link
+              size="small"
+              @click="handleApprove(row)"
+            >
+              通过
+            </el-button>
+            <el-button
+              v-if="row.status === 0"
+              type="warning"
+              link
+              size="small"
+              @click="handleReject(row)"
+            >
+              拒绝
+            </el-button>
+            <el-button
+              :type="row.pinned ? 'info' : 'primary'"
+              link
+              size="small"
+              @click="handleTogglePin(row)"
+            >
+              {{ row.pinned ? '取消置顶' : '置顶' }}
+            </el-button>
+            <el-button
+              type="danger"
+              link
+              size="small"
+              @click="handleDelete(row)"
+            >
+              删除
+            </el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+
+      <el-pagination
+        class="pagination"
+        background
+        layout="total, sizes, prev, pager, next, jumper"
+        :total="pagination.total"
+        :page-size="pagination.pageSize"
+        :current-page="pagination.page"
+        :page-sizes="[10, 20, 50, 100]"
+        @current-change="handleCurrentChange"
+        @size-change="handleSizeChange"
+      />
+    </el-card>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref, onMounted } from 'vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { postApi } from '@/api/community/post'
+import { usePagination } from '@/composables/usePagination'
+import { useTableSearch } from '@/composables/useTableSearch'
+
+const statusMap: Record<number, string> = {
+  0: '待审核',
+  1: '已通过',
+  2: '已拒绝',
+}
+
+const statusTagType: Record<number, 'primary' | 'success' | 'warning' | 'info' | 'danger'> = {
+  0: 'warning',
+  1: 'success',
+  2: 'danger',
+}
+
+const { loading, tableData, pagination, loadData, handleCurrentChange, handleSizeChange, resetPage } =
+  usePagination(postApi.list as (params: Record<string, unknown>) => Promise<unknown>)
+
+const { filters, getSearchParams, resetFilters } = useTableSearch({
+  status: '' as number | string,
+})
+
+const dateRange = ref<[string, string] | null>(null)
+
+function buildParams() {
+  const params = getSearchParams()
+  if (dateRange.value) {
+    params.startDate = dateRange.value[0]
+    params.endDate = dateRange.value[1]
+  }
+  return params
+}
+
+function handleSearch() {
+  resetPage()
+  loadData(buildParams())
+}
+
+function handleReset() {
+  resetFilters()
+  dateRange.value = null
+  resetPage()
+  loadData()
+}
+
+async function handleApprove(row: Record<string, unknown>) {
+  try {
+    await postApi.updateStatus(row.id as number, { status: 1 })
+    ElMessage.success('审核通过')
+    loadData(buildParams())
+  } catch {
+    // handled by interceptor
+  }
+}
+
+async function handleReject(row: Record<string, unknown>) {
+  try {
+    await ElMessageBox.confirm('确定要拒绝该帖子吗？', '提示', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning',
+    })
+    await postApi.updateStatus(row.id as number, { status: 2 })
+    ElMessage.success('已拒绝')
+    loadData(buildParams())
+  } catch {
+    // cancelled or error
+  }
+}
+
+async function handleTogglePin(row: Record<string, unknown>) {
+  try {
+    await postApi.togglePin(row.id as number, { pinned: !row.pinned })
+    ElMessage.success(row.pinned ? '已取消置顶' : '已置顶')
+    loadData(buildParams())
+  } catch {
+    // handled by interceptor
+  }
+}
+
+async function handleDelete(row: Record<string, unknown>) {
+  try {
+    await ElMessageBox.confirm('确定要删除该帖子吗？此操作不可恢复。', '警告', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning',
+    })
+    await postApi.updateStatus(row.id as number, { status: 3 })
+    ElMessage.success('删除成功')
+    loadData(buildParams())
+  } catch {
+    // cancelled or error
+  }
+}
+
+onMounted(() => {
+  loadData()
+})
+</script>
+
+<style lang="scss" scoped>
+.community-posts {
+  padding: 16px;
+}
+
+.filter-card {
+  margin-bottom: 16px;
+}
+
+.pagination {
+  margin-top: 16px;
+  display: flex;
+  justify-content: flex-end;
+}
+</style>

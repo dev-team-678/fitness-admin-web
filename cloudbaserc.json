@@ -1,0 +1,21 @@
+{
+  "version": "2.0",
+  "envId": "tech-vance-d3g4nuoqse6b67920",
+  "functionRoot": "cloudfunctions",
+  "functions": [
+    {
+      "name": "api-proxy",
+      "timeout": 30,
+      "memorySize": 256,
+      "runtime": "Nodejs18.15",
+      "handler": "index.main",
+      "triggers": [
+        {
+          "name": "http",
+          "type": "http",
+          "path": "/api-proxy"
+        }
+      ]
+    }
+  ]
+}

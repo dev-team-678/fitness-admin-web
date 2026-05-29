@@ -1,0 +1,55 @@
+// Element Plus Theme Override
+:root {
+  --el-color-primary: #{$primary-color};
+  --el-color-primary-light-3: #{$primary-light};
+  --el-color-primary-dark-2: #{$primary-dark};
+  --el-bg-color: #{$bg-white};
+  --el-text-color-primary: #{$text-primary};
+  --el-text-color-regular: #{$text-regular};
+  --el-border-color: #{$border-color};
+  --el-fill-color-light: #{$bg-color};
+}
+
+// Sidebar
+.el-menu {
+  border-right: none !important;
+}
+
+// Table
+.el-table {
+  --el-table-border-color: #{$border-light};
+
+  th.el-table__cell {
+    background-color: #{$bg-color} !important;
+    color: #{$text-primary};
+    font-weight: 600;
+  }
+}
+
+// Card
+.el-card {
+  border: 1px solid #{$border-light};
+  border-radius: 4px;
+
+  .el-card__header {
+    padding: 12px 20px;
+    border-bottom: 1px solid #{$border-light};
+  }
+}
+
+// Pagination
+.el-pagination {
+  margin-top: 16px;
+  justify-content: flex-end;
+}
+
+// Form
+.el-form--inline .el-form-item {
+  margin-bottom: 12px;
+}
+
+// Breadcrumb
+.el-breadcrumb {
+  font-size: 14px;
+  line-height: #{$navbar-height};
+}

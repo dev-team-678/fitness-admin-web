@@ -1,0 +1,388 @@
+<template>
+  <div class="user-list-page">
+    <!-- Search Bar -->
+    <el-card shadow="never" class="search-card">
+      <el-form :model="filters" inline @submit.prevent="handleSearch">
+        <el-form-item label="关键词">
+          <el-input
+            v-model="searchText"
+            placeholder="昵称 / OpenID / 用户ID"
+            clearable
+            style="width: 220px"
+            @keyup.enter="handleSearch"
+          />
+        </el-form-item>
+        <el-form-item label="性别">
+          <el-select v-model="filters.gender" placeholder="全部" clearable style="width: 120px">
+            <el-option label="男" :value="1" />
+            <el-option label="女" :value="2" />
+            <el-option label="未知" :value="0" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="健身目标">
+          <el-select v-model="filters.goal" placeholder="全部" clearable style="width: 140px">
+            <el-option
+              v-for="item in goalOptions"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value"
+            />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="健身水平">
+          <el-select v-model="filters.level" placeholder="全部" clearable style="width: 120px">
+            <el-option
+              v-for="item in levelOptions"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value"
+            />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="状态">
+          <el-select v-model="filters.status" placeholder="全部" clearable style="width: 120px">
+            <el-option label="正常" value="active" />
+            <el-option label="已禁用" value="disabled" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="注册时间">
+          <el-date-picker
+            v-model="filters.dateRange"
+            type="daterange"
+            range-separator="至"
+            start-placeholder="开始日期"
+            end-placeholder="结束日期"
+            value-format="YYYY-MM-DD"
+            style="width: 260px"
+          />
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" @click="handleSearch">
+            <el-icon><Search /></el-icon>查询
+          </el-button>
+          <el-button @click="handleReset">
+            <el-icon><Refresh /></el-icon>重置
+          </el-button>
+        </el-form-item>
+      </el-form>
+    </el-card>
+
+    <!-- Data Table -->
+    <el-card shadow="never" class="table-card">
+      <el-table
+        v-loading="loading"
+        :data="tableData"
+        border
+        stripe
+        row-key="id"
+        @selection-change="handleSelectionChange"
+      >
+        <el-table-column type="selection" width="50" align="center" />
+        <el-table-column prop="id" label="用户ID" width="90" align="center" />
+        <el-table-column prop="nickname" label="昵称" min-width="140" show-overflow-tooltip>
+          <template #default="{ row }">
+            <div class="nickname-cell">
+              <el-avatar
+                v-if="row.avatar"
+                :src="row.avatar"
+                :size="32"
+                class="nickname-avatar"
+              />
+              <span>{{ row.nickname || '-' }}</span>
+            </div>
+          </template>
+        </el-table-column>
+        <el-table-column label="头像" width="80" align="center">
+          <template #default="{ row }">
+            <el-avatar v-if="row.avatar" :src="row.avatar" :size="40" />
+            <el-avatar v-else :size="40">
+              <el-icon :size="20"><User /></el-icon>
+            </el-avatar>
+          </template>
+        </el-table-column>
+        <el-table-column label="性别" width="80" align="center">
+          <template #default="{ row }">
+            <span v-if="row.gender === 1">男</span>
+            <span v-else-if="row.gender === 2">女</span>
+            <span v-else class="text-muted">未知</span>
+          </template>
+        </el-table-column>
+        <el-table-column prop="goal" label="健身目标" width="120" align="center">
+          <template #default="{ row }">
+            <span>{{ formatGoal(row.goal) }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column prop="level" label="健身水平" width="100" align="center">
+          <template #default="{ row }">
+            <span>{{ formatLevel(row.level) }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column prop="workout_count" label="训练次数" width="100" align="center" sortable />
+        <el-table-column prop="last_active_at" label="最后活跃" width="170" align="center" sortable />
+        <el-table-column prop="created_at" label="注册时间" width="170" align="center" sortable />
+        <el-table-column label="状态" width="100" align="center">
+          <template #default="{ row }">
+            <el-tag :type="row.status === 'active' ? 'success' : 'danger'" effect="light">
+              {{ row.status === 'active' ? '正常' : '已禁用' }}
+            </el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="操作" width="200" align="center" fixed="right">
+          <template #default="{ row }">
+            <el-button link type="primary" @click="goDetail(row.id)">查看</el-button>
+            <el-button link type="primary" @click="handleEdit(row)">编辑</el-button>
+            <el-button
+              link
+              :type="row.status === 'active' ? 'danger' : 'success'"
+              @click="handleToggleStatus(row)"
+            >
+              {{ row.status === 'active' ? '禁用' : '启用' }}
+            </el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+
+      <!-- Pagination -->
+      <div class="pagination-wrapper">
+        <el-pagination
+          v-model:current-page="pagination.page"
+          v-model:page-size="pagination.pageSize"
+          :total="pagination.total"
+          :page-sizes="[10, 20, 50, 100]"
+          layout="total, sizes, prev, pager, next, jumper"
+          background
+          @current-change="handleCurrentChange"
+          @size-change="handleSizeChange"
+        />
+      </div>
+    </el-card>
+
+    <!-- Batch Action Bar -->
+    <transition name="slide-up">
+      <div v-if="selectedRows.length > 0" class="batch-bar">
+        <span class="batch-count">已选 {{ selectedRows.length }} 人</span>
+        <el-button type="danger" :loading="batchLoading" @click="handleBatchStatus('disabled')">
+          批量禁用
+        </el-button>
+        <el-button type="success" :loading="batchLoading" @click="handleBatchStatus('active')">
+          批量启用
+        </el-button>
+        <el-button text @click="clearSelection">取消选择</el-button>
+      </div>
+    </transition>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { Search, Refresh, User } from '@element-plus/icons-vue'
+import { userApi } from '@/api/user/user'
+import { usePagination } from '@/composables/usePagination'
+import { useTableSearch } from '@/composables/useTableSearch'
+
+const router = useRouter()
+
+// Search filters
+const { filters, searchText, getSearchParams, resetFilters } = useTableSearch({
+  gender: null as number | null,
+  goal: '' as string,
+  level: '' as string,
+  status: '' as string,
+  dateRange: null as [string, string] | null,
+})
+
+// Pagination
+const { loading, tableData, pagination, loadData, handleCurrentChange, handleSizeChange, resetPage } =
+  usePagination(async (params) => {
+    const searchParams = getSearchParams()
+    // Flatten dateRange into start_date / end_date
+    const { dateRange, ...rest } = searchParams
+    const extra: Record<string, unknown> = { ...rest }
+    if (dateRange && Array.isArray(dateRange)) {
+      extra.start_date = dateRange[0]
+      extra.end_date = dateRange[1]
+    }
+    const res = await userApi.list({ ...params, ...extra })
+    return (res as any).data
+  })
+
+// Selection
+const selectedRows = ref<any[]>([])
+const batchLoading = ref(false)
+
+// Filter options
+const goalOptions = [
+  { label: '减脂', value: 'fat_loss' },
+  { label: '增肌', value: 'muscle_gain' },
+  { label: '塑形', value: 'toning' },
+  { label: '提升体能', value: 'fitness' },
+  { label: '康复训练', value: 'rehabilitation' },
+  { label: '保持健康', value: 'health' },
+]
+
+const levelOptions = [
+  { label: '初学者', value: 'beginner' },
+  { label: '进阶', value: 'intermediate' },
+  { label: '高级', value: 'advanced' },
+]
+
+const goalMap: Record<string, string> = {
+  fat_loss: '减脂',
+  muscle_gain: '增肌',
+  toning: '塑形',
+  fitness: '提升体能',
+  rehabilitation: '康复训练',
+  health: '保持健康',
+}
+
+const levelMap: Record<string, string> = {
+  beginner: '初学者',
+  intermediate: '进阶',
+  advanced: '高级',
+}
+
+function formatGoal(goal: string) {
+  return goalMap[goal] || goal || '-'
+}
+
+function formatLevel(level: string) {
+  return levelMap[level] || level || '-'
+}
+
+// Actions
+function handleSearch() {
+  resetPage()
+  loadData()
+}
+
+function handleReset() {
+  resetFilters()
+  resetPage()
+  loadData()
+}
+
+function handleSelectionChange(rows: any[]) {
+  selectedRows.value = rows
+}
+
+function clearSelection() {
+  selectedRows.value = []
+}
+
+function goDetail(id: number) {
+  router.push(`/user/detail/${id}`)
+}
+
+function handleEdit(row: any) {
+  router.push(`/user/detail/${row.id}`)
+}
+
+async function handleToggleStatus(row: any) {
+  const newStatus = row.status === 'active' ? 'disabled' : 'active'
+  const actionText = newStatus === 'disabled' ? '禁用' : '启用'
+  try {
+    await ElMessageBox.confirm(`确定要${actionText}用户「${row.nickname || row.id}」吗？`, '确认操作', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning',
+    })
+    await userApi.updateStatus(row.id, { status: newStatus })
+    ElMessage.success(`已${actionText}`)
+    loadData()
+  } catch {
+    // user cancelled or request failed
+  }
+}
+
+async function handleBatchStatus(status: string) {
+  const actionText = status === 'disabled' ? '禁用' : '启用'
+  const ids = selectedRows.value.map((r) => r.id)
+  try {
+    await ElMessageBox.confirm(
+      `确定要${actionText}选中的 ${ids.length} 名用户吗？`,
+      '批量操作',
+      { confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning' },
+    )
+    batchLoading.value = true
+    await userApi.batchStatus({ user_ids: ids, status })
+    ElMessage.success(`已批量${actionText}`)
+    selectedRows.value = []
+    loadData()
+  } catch {
+    // cancelled
+  } finally {
+    batchLoading.value = false
+  }
+}
+
+// Initial load
+loadData()
+</script>
+
+<style lang="scss" scoped>
+.user-list-page {
+  padding: 16px;
+}
+
+.search-card {
+  margin-bottom: 16px;
+}
+
+.table-card {
+  margin-bottom: 80px;
+}
+
+.nickname-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.nickname-avatar {
+  flex-shrink: 0;
+}
+
+.text-muted {
+  color: #c0c4cc;
+}
+
+.pagination-wrapper {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 16px;
+}
+
+.batch-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 24px;
+  background: #fff;
+  box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.1);
+  border-top: 1px solid #ebeef5;
+}
+
+.batch-count {
+  font-size: 14px;
+  color: #606266;
+  font-weight: 500;
+}
+
+.slide-up-enter-active,
+.slide-up-leave-active {
+  transition: transform 0.25s ease, opacity 0.25s ease;
+}
+
+.slide-up-enter-from,
+.slide-up-leave-to {
+  transform: translateY(100%);
+  opacity: 0;
+}
+</style>
