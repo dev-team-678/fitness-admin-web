@@ -15,7 +15,8 @@ service.interceptors.request.use(
   (config) => {
     const token = getToken()
     if (token) {
-      config.headers.Authorization = `Bearer ${token}`
+      // Sa-Token 不需要 Bearer 前缀
+      config.headers.Authorization = token
     }
     return config
   },
@@ -26,7 +27,7 @@ service.interceptors.request.use(
 service.interceptors.response.use(
   (response) => {
     const { code, message, data } = response.data
-    if (code !== 0) {
+    if (code !== 0 && code !== 200) {
       ElMessage.error(message || '请求失败')
       return Promise.reject(new Error(message))
     }

@@ -1,196 +1,302 @@
-# Fitness Admin Web 前端部署文档
+# 运动健身助手管理后台 - 部署文档
 
-## 1. 项目概述
+## 部署架构
 
-| 项目 | 说明 |
-|------|------|
-| 项目名称 | 运动健身助手管理后台 |
-| 技术栈 | Vue 3 + TypeScript + Vite + Element Plus |
-| 构建工具 | Vite 8.x |
-| 包管理器 | npm |
-
-## 2. 环境配置
-
-### 2.1 环境变量文件
-
-#### 开发环境 `.env.development`
 ```
-VITE_APP_TITLE=运动健身助手管理后台
-VITE_APP_BASE_API=/api/admin/v1
-VITE_APP_ENV=development
+用户浏览器
+    ↓ HTTP/HTTPS
+Nginx (轻量应用服务器 101.34.203.217)
+    ├── 前端静态文件 (Vue SPA) → /usr/share/nginx/html
+    └── API 代理 → 后端 Java 服务 (localhost:8080)
 ```
 
-#### 生产环境 `.env.production`
-```
-VITE_APP_TITLE=运动健身助手管理后台
-VITE_APP_BASE_API=/api/admin/v1
-VITE_APP_ENV=production
-```
-
-### 2.2 后端 API 配置
-
-| 环境 | API 基础路径 | 说明 |
-|------|-------------|------|
-| 开发 | `/api/admin/v1` | 通过 Vite 代理转发 |
-| 生产 | `/api/admin/v1` | 由 Nginx/网关统一代理到后端服务 |
-
-后端服务部署地址：`https://tech-vance.top`
-
-## 3. 本地开发
-
-### 3.1 安装依赖
-
-```bash
-cd fitness-admin-web
-npm install
-```
-
-### 3.2 启动开发服务器
-
-```bash
-npm run dev
-```
-
-默认启动地址：`http://localhost:5173`
-
-### 3.3 构建生产包
-
-```bash
-npm run build
-```
-
-构建输出目录：`./dist`
-
-## 4. 部署流程
-
-### 4.1 部署目标
+## 服务器信息
 
 | 项目 | 值 |
 |------|-----|
-| 平台 | 腾讯云 CloudBase 静态网站托管 |
-| 环境 ID | `tech-vance-d3g4nuoqse6b67920` |
-| 访问域名 | `https://tech-vance-d3g4nuoqse6b67920-1258886224.tcloudbaseapp.com` |
+| 服务器 IP | 101.34.203.217 |
+| 服务器类型 | 腾讯云轻量应用服务器 |
+| 实例 ID | lhins-dn6pnqem |
+| 操作系统 | Ubuntu |
+| Nginx 版本 | 1.24.0 |
+| 后端服务 | Spring Boot (端口 8080) |
 
-### 4.2 前置要求
+## 前端访问地址
 
-- 安装 CloudBase CLI (`tcb`)
-- 已登录 CloudBase 账号 (`tcb login`)
-- 静态网站托管服务已启用
+- **主地址**: http://101.34.203.217
+- **域名地址**: https://tech-vance.top (如已配置域名)
 
-### 4.3 部署步骤
+## 管理员测试账号
+
+| 字段 | 值 |
+|------|-----|
+| 用户名 | admin |
+| 密码 | 123456 |
+| 昵称 | 系统管理员 |
+| 邮箱 | admin@tech-vance.top |
+
+## 部署步骤
+
+### 1. 环境准备
+
+确保服务器已安装：
+- Nginx
+- Java 运行时 (用于后端服务)
+- MySQL (或已配置远程数据库)
+
+### 2. 前端构建
+
+在本地开发环境执行：
 
 ```bash
-# 1. 进入项目目录
+# 进入前端项目目录
 cd fitness-admin-web
 
-# 2. 安装依赖
+# 安装依赖
 npm install
 
-# 3. 构建生产包
+# 生产环境构建
 npm run build
-
-# 4. 确认目标环境
-# tcb env list
-
-# 5. 检查静态托管状态
-# tcb hosting detail --env-id tech-vance-d3g4nuoqse6b67920
-
-# 6. 部署到 CloudBase 静态托管
-tcb hosting deploy ./dist --env-id tech-vance-d3g4nuoqse6b67920 --yes
 ```
 
-### 4.4 部署验证
+构建完成后，会在 `dist` 目录生成静态文件。
 
-部署完成后，访问以下地址验证：
+### 3. 上传前端文件到服务器
 
+使用 SCP 或 FTP 工具上传：
+
+```bash
+# 使用 SCP 上传
+cd fitness-admin-web
+scp -r dist/* root@101.34.203.217:/usr/share/nginx/html/
+
+# 或使用 rsync
+rsync -avz dist/ root@101.34.203.217:/usr/share/nginx/html/
 ```
-https://tech-vance-d3g4nuoqse6b67920-1258886224.tcloudbaseapp.com
-```
 
-> CDN 缓存提示：如页面未更新，可使用浏览器无痕模式验证，CDN 通常在数分钟内刷新。
+### 4. 配置 Nginx
 
-## 5. 已知问题与修复记录
+编辑 `/etc/nginx/nginx.conf`：
 
-### 5.1 TypeScript 类型兼容性问题
-
-**问题描述**：Element Plus 的 `<el-tag>` 组件 `type` 属性只接受 `'primary' | 'success' | 'warning' | 'info' | 'danger' | undefined`，但项目中多处使用了空字符串 `''` 或宽泛的 `string` 类型，导致构建失败。
-
-**涉及文件**：
-- `src/views/ai/safety/list.vue`
-- `src/views/ai/knowledge/list.vue`
-- `src/views/ai/plans/detail.vue`
-- `src/views/ai/plans/list.vue`
-- `src/views/community/posts.vue`
-- `src/views/community/reports.vue`
-- `src/views/system/announcement.vue`
-- `src/views/system/operation-log.vue`
-
-**修复方案**：
-
-将类型定义从 `Record<string, string>` 改为精确联合类型：
-
-```typescript
-// 修复前
-const statusTagType: Record<number, string> = {
-  0: 'warning',
-  1: 'success',
-  2: 'danger',
+```nginx
+events {
+    worker_connections 1024;
 }
 
-// 修复后
-const statusTagType: Record<number, 'primary' | 'success' | 'warning' | 'info' | 'danger'> = {
-  0: 'warning',
-  1: 'success',
-  2: 'danger',
+http {
+    include /etc/nginx/mime.types;
+    default_type application/octet-stream;
+
+    log_format main '$remote_addr - $remote_user [$time_local] "$request" '
+                    '$status $body_bytes_sent "$http_referer" '
+                    '"$http_user_agent" "$http_x_forwarded_for"';
+
+    access_log /var/log/nginx/access.log main;
+    error_log /var/log/nginx/error.log;
+
+    sendfile on;
+    tcp_nopush on;
+    tcp_nodelay on;
+    keepalive_timeout 65;
+    types_hash_max_size 2048;
+
+    # Gzip压缩
+    gzip on;
+    gzip_vary on;
+    gzip_min_length 1024;
+    gzip_types text/plain text/css text/xml text/javascript application/json application/javascript application/xml+rss application/rss+xml font/truetype font/opentype application/vnd.ms-fontobject image/svg+xml;
+
+    upstream fitness_admin {
+        server 127.0.0.1:8080;
+    }
+
+    server {
+        listen 80;
+        server_name localhost;
+
+        # 前端静态资源（SPA应用）
+        location / {
+            root /usr/share/nginx/html;
+            index index.html;
+            try_files $uri $uri/ /index.html;
+            expires 1d;
+        }
+
+        # 前端静态资源缓存
+        location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ {
+            root /usr/share/nginx/html;
+            expires 30d;
+            add_header Cache-Control "public, immutable";
+        }
+
+        # API代理 - 处理 /api/admin/v1/ 路径
+        location /api/admin/v1/ {
+            proxy_pass http://fitness_admin/;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+            proxy_connect_timeout 60s;
+            proxy_send_timeout 60s;
+            proxy_read_timeout 60s;
+        }
+
+        # WebSocket代理
+        location /ws/ {
+            proxy_pass http://fitness_admin/ws/;
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection "upgrade";
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_read_timeout 86400s;
+        }
+
+        # 登录接口限流
+        location /api/admin/v1/auth/login {
+            limit_req zone=login burst=5 nodelay;
+            proxy_pass http://fitness_admin/auth/login;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        }
+    }
+
+    # 限流区域定义
+    limit_req_zone $binary_remote_addr zone=login:10m rate=10r/m;
 }
 ```
 
-将空字符串改为 `undefined`：
+### 5. 测试配置并重启 Nginx
 
-```typescript
-// 修复前
-const typeTagMap: Record<string, string> = {
-  notice: '',
-  update: 'success',
-}
+```bash
+# 测试配置语法
+nginx -t
 
-// 修复后
-const typeTagMap: Record<string, 'primary' | 'success' | 'warning' | 'info' | 'danger' | undefined> = {
-  notice: undefined,
-  update: 'success',
-}
+# 重启 Nginx
+systemctl restart nginx
 ```
 
-### 5.2 TypeScript 6.0 弃用警告
+### 6. 验证部署
 
-**问题描述**：`tsconfig.app.json` 中的 `baseUrl` 选项在 TypeScript 7.0 中将被弃用，导致构建报错。
+1. 访问前端页面：
+   ```
+   http://101.34.203.217
+   ```
 
-**修复方案**：在 `tsconfig.app.json` 的 `compilerOptions` 中添加：
+2. 测试登录接口：
+   ```bash
+   curl -X POST "http://101.34.203.217/api/admin/v1/auth/login" \
+     -H "Content-Type: application/json" \
+     -d '{"username":"admin","password":"123456"}'
+   ```
 
-```json
-{
-  "compilerOptions": {
-    "ignoreDeprecations": "6.0"
-  }
-}
+3. 预期返回：
+   ```json
+   {"code":0,"message":"登录成功","data":{"token":"xxx"}}
+   ```
+
+## 数据库初始化
+
+如果后端返回 `系统异常` (code: 9999)，可能是数据库未初始化。
+
+### 初始化步骤
+
+1. 连接 MySQL 数据库
+2. 执行 `db-init.sql` 脚本：
+
+```sql
+-- 创建角色表
+CREATE TABLE IF NOT EXISTS `admin_role` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `name` VARCHAR(64) NOT NULL,
+  `code` VARCHAR(64) NOT NULL,
+  `description` VARCHAR(256) DEFAULT NULL,
+  `permissions` JSON NOT NULL,
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_code` (`code`)
+);
+
+-- 插入超级管理员角色
+INSERT INTO `admin_role` (`name`, `code`, `description`, `permissions`) VALUES
+('超级管理员', 'super_admin', '拥有所有权限', '["dashboard","user","content","workout","achievement","community","ai","system"]');
+
+-- 创建管理员表
+CREATE TABLE IF NOT EXISTS `admin_user` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `username` VARCHAR(64) NOT NULL,
+  `password` VARCHAR(256) NOT NULL,
+  `nickname` VARCHAR(64) DEFAULT NULL,
+  `avatar` VARCHAR(256) DEFAULT NULL,
+  `email` VARCHAR(128) DEFAULT NULL,
+  `phone` VARCHAR(20) DEFAULT NULL,
+  `role_id` INT UNSIGNED DEFAULT NULL,
+  `status` TINYINT(1) NOT NULL DEFAULT 1,
+  `deleted` TINYINT(1) NOT NULL DEFAULT 0,
+  `last_login_ip` VARCHAR(45) DEFAULT NULL,
+  `last_login_time` DATETIME DEFAULT NULL,
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_username` (`username`),
+  KEY `idx_role` (`role_id`)
+);
+
+-- 插入测试账号 (用户名: admin, 密码: 123456)
+INSERT INTO `admin_user` (`username`, `password`, `nickname`, `email`, `role_id`, `status`, `deleted`) VALUES
+('admin', 'e10adc3949ba59abbe56e057f20f883e', '系统管理员', 'admin@tech-vance.top', 1, 1, 0);
 ```
 
-## 6. 常用命令
+## 后端服务管理
 
-| 命令 | 说明 |
-|------|------|
-| `npm run dev` | 启动开发服务器 |
-| `npm run build` | 构建生产包（含类型检查） |
-| `npm run preview` | 预览生产构建 |
-| `tcb hosting deploy ./dist --env-id <envId> --yes` | 部署到 CloudBase |
-| `tcb hosting list --env-id <envId>` | 查看已部署文件列表 |
-| `tcb hosting detail --env-id <envId>` | 查看静态托管服务信息 |
+### 查看服务状态
+```bash
+systemctl status fitness-admin
+```
 
-## 7. 相关资源
+### 重启后端服务
+```bash
+systemctl restart fitness-admin
+```
 
-| 资源 | 链接 |
-|------|------|
-| CloudBase 控制台 | https://tcb.cloud.tencent.com/dev?envId=tech-vance-d3g4nuoqse6b67920 |
-| 静态托管管理 | https://tcb.cloud.tencent.com/dev?envId=tech-vance-d3g4nuoqse6b67920#/static-hosting |
-| 前端访问地址 | https://tech-vance-d3g4nuoqse6b67920-1258886224.tcloudbaseapp.com |
-| 后端 API | https://tech-vance.top/api/admin/v1 |
+### 查看后端日志
+```bash
+journalctl -u fitness-admin -n 100
+```
+
+## 常见问题
+
+### 1. 404 Not Found
+- 检查前端文件是否正确上传到 `/usr/share/nginx/html/`
+- 检查 nginx 配置中的 `root` 路径是否正确
+
+### 2. 系统异常 (code: 9999)
+- 检查后端服务是否正常运行
+- 检查数据库是否已初始化
+- 查看后端日志获取详细错误信息
+
+### 3. CORS 错误
+- 确保前端请求地址与 nginx 配置一致
+- 检查 `location /api/admin/v1/` 配置是否正确
+
+### 4. 静态资源加载失败
+- 检查文件权限：`chmod -R 755 /usr/share/nginx/html/`
+- 检查 nginx 用户是否有读取权限
+
+## 技术栈
+
+- **前端**: Vue 3 + TypeScript + Vite + Element Plus
+- **后端**: Spring Boot + Java
+- **数据库**: MySQL (腾讯云 CynosDB)
+- **服务器**: Nginx + Ubuntu
+- **部署方式**: 轻量应用服务器
+
+## 更新记录
+
+| 日期 | 更新内容 |
+|------|----------|
+| 2026-05-29 | 初始部署文档 |
+| 2026-05-30 | 更新为 nginx 部署方式，添加后端服务配置 |
