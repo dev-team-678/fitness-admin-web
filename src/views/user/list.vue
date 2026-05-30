@@ -157,6 +157,85 @@
       </div>
     </el-card>
 
+    <!-- Edit Dialog -->
+    <el-dialog v-model="editVisible" title="编辑用户" width="600px" destroy-on-close>
+      <el-form ref="editFormRef" :model="editForm" :rules="editRules" label-width="100px">
+        <el-form-item label="昵称" prop="nickname">
+          <el-input v-model="editForm.nickname" placeholder="请输入昵称" />
+        </el-form-item>
+        <el-form-item label="性别" prop="gender">
+          <el-radio-group v-model="editForm.gender">
+            <el-radio :value="0">未知</el-radio>
+            <el-radio :value="1">男</el-radio>
+            <el-radio :value="2">女</el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item label="生日">
+          <el-date-picker
+            v-model="editForm.birthday"
+            type="date"
+            placeholder="选择日期"
+            value-format="YYYY-MM-DD"
+            style="width: 100%"
+          />
+        </el-form-item>
+        <el-row :gutter="16">
+          <el-col :span="12">
+            <el-form-item label="身高(cm)">
+              <el-input-number v-model="editForm.heightCm" :min="50" :max="250" :precision="1" style="width: 100%" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="体重(kg)">
+              <el-input-number v-model="editForm.currentWeightKg" :min="20" :max="300" :precision="1" style="width: 100%" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-form-item label="目标体重(kg)">
+          <el-input-number v-model="editForm.targetWeightKg" :min="20" :max="300" :precision="1" style="width: 200px" />
+        </el-form-item>
+        <el-row :gutter="16">
+          <el-col :span="12">
+            <el-form-item label="健身目标">
+              <el-select v-model="editForm.fitnessGoal" placeholder="请选择" clearable style="width: 100%">
+                <el-option v-for="item in goalOptions" :key="item.value" :label="item.label" :value="item.value" />
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="健身水平">
+              <el-select v-model="editForm.fitnessLevel" placeholder="请选择" clearable style="width: 100%">
+                <el-option v-for="item in levelOptions" :key="item.value" :label="item.label" :value="item.value" />
+              </el-select>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row :gutter="16">
+          <el-col :span="12">
+            <el-form-item label="每周训练(天)">
+              <el-input-number v-model="editForm.workoutDaysPerWeek" :min="1" :max="7" style="width: 100%" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="单次时长(分)">
+              <el-input-number v-model="editForm.workoutDurationMin" :min="10" :max="180" :step="5" style="width: 100%" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-form-item label="标签">
+          <el-checkbox-group v-model="editForm.tagIds">
+            <el-checkbox v-for="tag in allTags" :key="tag.id" :value="tag.id">
+              {{ tag.name }}
+            </el-checkbox>
+          </el-checkbox-group>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="editVisible = false">取消</el-button>
+        <el-button type="primary" :loading="editLoading" @click="handleEditSubmit">保存</el-button>
+      </template>
+    </el-dialog>
+
     <!-- Batch Action Bar -->
     <transition name="slide-up">
       <div v-if="selectedRows.length > 0" class="batch-bar">
@@ -174,9 +253,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import type { FormInstance, FormRules } from 'element-plus'
 import { Search, Refresh, User } from '@element-plus/icons-vue'
 import { userApi } from '@/api/user/user'
 import { usePagination } from '@/composables/usePagination'
@@ -205,7 +285,7 @@ const { loading, tableData, pagination, loadData, handleCurrentChange, handleSiz
       extra.end_date = dateRange[1]
     }
     const res = await userApi.list({ ...params, ...extra })
-    return (res as any).data
+    return res
   })
 
 // Selection
@@ -251,6 +331,72 @@ function formatLevel(level: string) {
   return levelMap[level] || level || '-'
 }
 
+// Edit dialog
+const editVisible = ref(false)
+const editLoading = ref(false)
+const editFormRef = ref<FormInstance>()
+const allTags = ref<any[]>([])
+
+const editForm = reactive({
+  id: 0,
+  nickname: '',
+  gender: 0,
+  birthday: '',
+  heightCm: null as number | null,
+  currentWeightKg: null as number | null,
+  targetWeightKg: null as number | null,
+  fitnessGoal: '',
+  fitnessLevel: '',
+  workoutDaysPerWeek: null as number | null,
+  workoutDurationMin: null as number | null,
+  tagIds: [] as number[],
+})
+
+const editRules: FormRules = {
+  nickname: [{ required: true, message: '请输入昵称', trigger: 'blur' }],
+}
+
+function handleEdit(row: any) {
+  editForm.id = row.id
+  editForm.nickname = row.nickname || ''
+  editForm.gender = row.gender ?? 0
+  editForm.birthday = row.birthday || ''
+  editForm.heightCm = row.heightCm ?? null
+  editForm.currentWeightKg = row.currentWeightKg ?? null
+  editForm.targetWeightKg = row.targetWeightKg ?? null
+  editForm.fitnessGoal = row.fitnessGoal || ''
+  editForm.fitnessLevel = row.fitnessLevel || ''
+  editForm.workoutDaysPerWeek = row.workoutDaysPerWeek ?? null
+  editForm.workoutDurationMin = row.workoutDurationMin ?? null
+  editForm.tagIds = (row.tags || []).map((t: any) => t.id)
+  editVisible.value = true
+}
+
+async function handleEditSubmit() {
+  const valid = await editFormRef.value?.validate().catch(() => false)
+  if (!valid) return
+  editLoading.value = true
+  try {
+    await userApi.update({ ...editForm })
+    ElMessage.success('保存成功')
+    editVisible.value = false
+    loadData()
+  } catch (e: any) {
+    ElMessage.error(e?.message || '保存失败')
+  } finally {
+    editLoading.value = false
+  }
+}
+
+async function loadTags() {
+  try {
+    const res = await userApi.tags()
+    allTags.value = (res as any).data || res || []
+  } catch {
+    // ignore
+  }
+}
+
 // Actions
 function handleSearch() {
   resetPage()
@@ -273,10 +419,6 @@ function clearSelection() {
 
 function goDetail(id: number) {
   router.push(`/user/detail/${id}`)
-}
-
-function handleEdit(row: any) {
-  router.push(`/user/detail/${row.id}`)
 }
 
 async function handleToggleStatus(row: any) {
@@ -318,6 +460,9 @@ async function handleBatchStatus(status: string) {
 }
 
 // Initial load
+onMounted(() => {
+  loadTags()
+})
 loadData()
 </script>
 

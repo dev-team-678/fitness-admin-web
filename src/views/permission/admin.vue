@@ -149,7 +149,8 @@ const rules = {
 async function loadRoles() {
   try {
     const res = await roleApi.list()
-    roleOptions.value = (res as { data: RoleOption[] }).data || []
+    const responseData = (res as { data: { list: RoleOption[] } }).data
+    roleOptions.value = responseData?.list || []
   } catch {
     // Error handled by interceptor
   }

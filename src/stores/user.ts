@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { authApi } from '@/api/auth'
 import { setToken, removeToken } from '@/utils/auth'
+import { usePermissionStore } from '@/stores/permission'
 
 export interface AdminUser {
   id: number
@@ -41,6 +42,9 @@ export const useUserStore = defineStore('user', () => {
     userInfo.value = null
     permissions.value = []
     removeToken()
+    // 重置权限 store，确保重新登录后会重新生成路由
+    const permStore = usePermissionStore()
+    permStore.routesGenerated = false
   }
 
   function hasPermission(perm: string): boolean {

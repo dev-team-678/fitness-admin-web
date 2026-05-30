@@ -132,7 +132,8 @@ async function loadData() {
   loading.value = true
   try {
     const res = await roleApi.list()
-    tableData.value = (res as { data: RoleItem[] }).data || []
+    const responseData = (res as { data: { list: RoleItem[] } }).data
+    tableData.value = responseData?.list || []
   } catch {
     // Error handled by interceptor
   } finally {

@@ -46,7 +46,12 @@ function filterRoutes(routes: RouteRecordRaw[], permissions: string[]): RouteRec
 }
 
 function buildMenuRoutes(routes: RouteRecordRaw[]): RouteRecordRaw[] {
-  return routes.filter((r) => !r.meta?.hidden)
+  return routes
+    .filter((r) => !r.meta?.hidden)
+    .map((r) => ({
+      ...r,
+      children: r.children ? buildMenuRoutes(r.children) : [],
+    }))
 }
 
 // Store permissions for hasPermission checks

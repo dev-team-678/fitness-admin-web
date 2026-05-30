@@ -17,9 +17,9 @@ export function usePagination(fetchFn: (params: Record<string, unknown>) => Prom
         pageSize: pagination.pageSize,
         ...extraParams,
       })
-      const data = res as { data: unknown[]; pagination: { total: number } }
-      tableData.value = data.data || []
-      pagination.total = data.pagination?.total || 0
+      const responseData = (res as { data: { list: unknown[]; total: number } }).data
+      tableData.value = responseData?.list || []
+      pagination.total = responseData?.total || 0
     } finally {
       loading.value = false
     }
