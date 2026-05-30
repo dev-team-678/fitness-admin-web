@@ -10,21 +10,32 @@
 
       <el-table v-loading="loading" :data="tableData" border stripe>
         <el-table-column prop="id" label="ID" width="80" />
-        <el-table-column prop="username" label="用户名" min-width="150" />
-        <el-table-column prop="roleName" label="角色" width="150">
+        <el-table-column prop="username" label="用户名" min-width="120" />
+        <el-table-column prop="nickname" label="昵称" min-width="120">
+          <template #default="{ row }">
+            <span>{{ row.nickname || '-' }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column prop="userId" label="关联用户ID" width="110" align="center">
+          <template #default="{ row }">
+            <el-tag v-if="row.userId" type="success">{{ row.userId }}</el-tag>
+            <span v-else class="text-muted">-</span>
+          </template>
+        </el-table-column>
+        <el-table-column prop="roleName" label="角色" width="120">
           <template #default="{ row }">
             <el-tag>{{ row.roleName || '-' }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="status" label="状态" width="100">
+        <el-table-column prop="status" label="状态" width="80" align="center">
           <template #default="{ row }">
             <el-tag :type="row.status === 1 ? 'success' : 'danger'">
               {{ row.status === 1 ? '启用' : '禁用' }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="lastLoginTime" label="最后登录时间" width="180" />
-        <el-table-column prop="lastLoginIp" label="最后登录IP" width="140" />
+        <el-table-column prop="lastLoginTime" label="最后登录时间" width="170" />
+        <el-table-column prop="lastLoginIp" label="最后登录IP" width="130" />
         <el-table-column label="操作" width="240" fixed="right">
           <template #default="{ row }">
             <el-button type="primary" link @click="handleEdit(row)">编辑</el-button>
@@ -79,6 +90,9 @@
             show-password
           />
         </el-form-item>
+        <el-form-item label="昵称">
+          <el-input v-model="editForm.nickname" placeholder="请输入昵称" />
+        </el-form-item>
         <el-form-item label="角色" prop="roleId">
           <el-select v-model="editForm.roleId" placeholder="请选择角色" style="width: 100%">
             <el-option
@@ -88,6 +102,31 @@
               :value="role.id"
             />
           </el-select>
+        </el-form-item>
+        <el-form-item label="关联小程序用户">
+          <el-select
+            v-model="editForm.userId"
+            filterable
+            remote
+            clearable
+            placeholder="输入昵称搜索小程序用户"
+            :remote-method="searchUsers"
+            :loading="userSearchLoading"
+            style="width: 100%"
+          >
+            <el-option
+              v-for="u in userOptions"
+              :key="u.id"
+              :label="`${u.nickname || u.id} (ID: ${u.id})`"
+              :value="u.id"
+            />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="邮箱">
+          <el-input v-model="editForm.email" placeholder="请输入邮箱" />
+        </el-form-item>
+        <el-form-item label="手机号">
+          <el-input v-model="editForm.phone" placeholder="请输入手机号" />
         </el-form-item>
       </el-form>
       <template #footer>
@@ -104,13 +143,18 @@ import { ElMessage } from 'element-plus'
 import type { FormInstance } from 'element-plus'
 import { adminApi } from '@/api/system/admin'
 import { roleApi } from '@/api/system/role'
+import { userApi } from '@/api/user/user'
 import { usePagination } from '@/composables/usePagination'
 
 interface AdminItem {
   id: number
   username: string
+  nickname: string
+  userId: number | null
   roleName: string
   roleId: number
+  email: string
+  phone: string
   status: number
   lastLoginTime: string
   lastLoginIp: string
@@ -119,6 +163,11 @@ interface AdminItem {
 interface RoleOption {
   id: number
   name: string
+}
+
+interface UserOption {
+  id: number
+  nickname: string
 }
 
 const { loading, tableData, pagination, loadData, handleCurrentChange, handleSizeChange } =
@@ -135,7 +184,31 @@ const editForm = reactive({
   username: '',
   password: '',
   roleId: undefined as number | undefined,
+  nickname: '',
+  userId: undefined as number | undefined,
+  email: '',
+  phone: '',
 })
+
+const userSearchLoading = ref(false)
+const userOptions = ref<UserOption[]>([])
+
+async function searchUsers(query: string) {
+  if (!query) {
+    userOptions.value = []
+    return
+  }
+  userSearchLoading.value = true
+  try {
+    const res = await userApi.list({ pageNum: 1, pageSize: 20, keyword: query })
+    const data = (res as any).data
+    userOptions.value = data?.list || data || []
+  } catch {
+    userOptions.value = []
+  } finally {
+    userSearchLoading.value = false
+  }
+}
 
 const rules = {
   username: [{ required: true, message: '请输入用户名', trigger: 'blur' }],
@@ -162,6 +235,11 @@ function handleCreate() {
   editForm.username = ''
   editForm.password = ''
   editForm.roleId = undefined
+  editForm.nickname = ''
+  editForm.userId = undefined
+  editForm.email = ''
+  editForm.phone = ''
+  userOptions.value = []
   dialogVisible.value = true
 }
 
@@ -171,12 +249,17 @@ function handleEdit(row: AdminItem) {
   editForm.username = row.username
   editForm.password = ''
   editForm.roleId = row.roleId
+  editForm.nickname = row.nickname || ''
+  editForm.userId = row.userId || undefined
+  editForm.email = row.email || ''
+  editForm.phone = row.phone || ''
+  userOptions.value = row.userId ? [{ id: row.userId, nickname: '' }] : []
   dialogVisible.value = true
 }
 
 async function handleToggleStatus(row: AdminItem) {
   try {
-    const newStatus = row.status === 1 ? 0 : 1
+    const newStatus = row.status === 1 ? 2 : 1
     await adminApi.updateStatus(row.id, { status: newStatus })
     ElMessage.success(newStatus === 1 ? '已启用' : '已禁用')
     loadData()
@@ -201,13 +284,23 @@ async function handleSubmit() {
   submitting.value = true
   try {
     if (isEdit.value) {
-      await adminApi.update(editId.value, { roleId: editForm.roleId })
+      await adminApi.update(editId.value, {
+        roleId: editForm.roleId,
+        userId: editForm.userId,
+        nickname: editForm.nickname,
+        email: editForm.email,
+        phone: editForm.phone,
+      })
       ElMessage.success('更新成功')
     } else {
       await adminApi.create({
         username: editForm.username,
         password: editForm.password,
         roleId: editForm.roleId,
+        nickname: editForm.nickname,
+        userId: editForm.userId,
+        email: editForm.email,
+        phone: editForm.phone,
       })
       ElMessage.success('创建成功')
     }
@@ -241,5 +334,9 @@ onMounted(() => {
   margin-top: 16px;
   display: flex;
   justify-content: flex-end;
+}
+
+.text-muted {
+  color: #c0c4cc;
 }
 </style>
