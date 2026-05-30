@@ -23,7 +23,7 @@ export function setupRouterGuards(router: Router) {
           const routes = permStore.generateRoutes(userStore.permissions)
           permStore.setPermissions(userStore.permissions)
           routes.forEach((r) => router.addRoute(r))
-          next({ ...to, replace: true })
+          next({ path: to.path, query: to.query, replace: true })
         } catch {
           userStore.logout()
           next(`/login?redirect=${to.path}`)
