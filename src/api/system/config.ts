@@ -2,18 +2,24 @@ import request from '../request'
 
 export const systemConfigApi = {
   list() {
-    return request.get('/system/configs')
+    return request.get('/sys-config/list')
   },
   update(key: string, data: { value: string }) {
-    return request.put(`/system/configs/${key}`, data)
+    return request.put(`/sys-config/${key}`, data)
+  },
+  save(data: Record<string, unknown>) {
+    return request.post('/sys-config', data)
+  },
+  delete(id: number) {
+    return request.delete(`/sys-config/${id}`)
   },
   getAiConfig() {
-    return request.get('/system/ai-config')
+    return request.get('/sys-config/ai-config')
   },
   updateAiConfig(data: Record<string, unknown>) {
-    return request.put('/system/ai-config', data)
+    return request.put('/sys-config/ai-config', data)
   },
   testAiConnection() {
-    return request.post('/system/ai-config/test-connection')
+    return request.post('/sys-config/ai-config/test-connection')
   },
 }

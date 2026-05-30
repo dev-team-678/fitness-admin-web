@@ -2,21 +2,21 @@ import request from '../request'
 
 export const adminApi = {
   list(params: Record<string, unknown>) {
-    return request.get('/admins', { params })
+    return request.get('/admin-role/list', { params })
   },
   create(data: Record<string, unknown>) {
-    return request.post('/admins', data)
+    return request.post('/admin-role', data)
   },
   update(id: number, data: Record<string, unknown>) {
-    return request.put(`/admins/${id}`, data)
+    return request.put(`/admin-role/${id}`, data)
   },
   updateStatus(id: number, data: { status: number }) {
-    return request.put(`/admins/${id}/status`, data)
+    return request.put(`/admin-role/${id}/status`, data)
   },
   resetPassword(id: number) {
-    return request.post(`/admins/${id}/reset-password`)
+    return request.post(`/admin-role/${id}/reset-password`)
   },
   loginLogs(params: Record<string, unknown>) {
-    return request.get('/login-logs', { params })
+    return request.get('/operation-log/list', { params })
   },
 }

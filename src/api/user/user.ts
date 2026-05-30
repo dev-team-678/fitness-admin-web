@@ -2,36 +2,45 @@ import request from '../request'
 
 export const userApi = {
   list(params: Record<string, unknown>) {
-    return request.get('/users', { params })
+    return request.get('/user/list', { params })
   },
   detail(id: number) {
-    return request.get(`/users/${id}`)
+    return request.get(`/user/${id}`)
   },
-  update(id: number, data: Record<string, unknown>) {
-    return request.put(`/users/${id}`, data)
+  update(data: Record<string, unknown>) {
+    return request.put('/user', data)
   },
   updateStatus(id: number, data: { status: string; reason?: string }) {
-    return request.put(`/users/${id}/status`, data)
+    return request.put(`/user/${id}/status`, data)
   },
   batchStatus(data: { user_ids: number[]; status: string; reason?: string }) {
-    return request.put('/users/batch-status', data)
+    return request.put('/user/batch-status', data)
   },
   getWorkouts(id: number, params?: Record<string, unknown>) {
-    return request.get(`/users/${id}/workouts`, { params })
+    return request.get(`/user/${id}/workouts`, { params })
   },
   getBodyMetrics(id: number) {
-    return request.get(`/users/${id}/body-metrics`)
+    return request.get(`/user/${id}/body-metrics`)
   },
   getAchievements(id: number) {
-    return request.get(`/users/${id}/achievements`)
+    return request.get(`/user/${id}/achievements`)
   },
   getAiProfile(id: number) {
-    return request.get(`/users/${id}/ai-profile`)
+    return request.get(`/user/${id}/ai-profile`)
   },
   getAiChats(id: number, params?: Record<string, unknown>) {
-    return request.get(`/users/${id}/ai-chats`, { params })
+    return request.get(`/user/${id}/ai-chats`, { params })
   },
   export(params?: Record<string, unknown>) {
-    return request.get('/users/export', { params, responseType: 'blob' })
+    return request.get('/user/export', { params, responseType: 'blob' })
+  },
+  tags() {
+    return request.get('/user/tags')
+  },
+  saveTag(data: Record<string, unknown>) {
+    return request.post('/user/tag', data)
+  },
+  deleteTag(id: number) {
+    return request.delete(`/user/tag/${id}`)
   },
 }

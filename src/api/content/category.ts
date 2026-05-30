@@ -2,15 +2,15 @@ import request from '../request'
 
 export const categoryApi = {
   list() {
-    return request.get('/categories')
+    return request.get('/category/list')
   },
   create(data: { name: string; parentId?: number }) {
-    return request.post('/categories', data)
+    return request.post('/category', data)
   },
   update(id: number, data: { name: string }) {
-    return request.put(`/categories/${id}`, data)
+    return request.put(`/category/${id}`, data)
   },
   delete(id: number) {
-    return request.delete(`/categories/${id}`)
+    return request.delete(`/category/${id}`)
   },
 }

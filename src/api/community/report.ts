@@ -2,12 +2,12 @@ import request from '../request'
 
 export const reportApi = {
   list(params: Record<string, unknown>) {
-    return request.get('/community/reports', { params })
+    return request.get('/report/list', { params })
   },
   handle(id: number, data: { action: string; reason?: string }) {
-    return request.put(`/community/reports/${id}`, data)
+    return request.put(`/report/${id}/handle`, data)
   },
   muteUser(id: number, data: { duration: number; reason: string }) {
-    return request.post(`/community/users/${id}/mute`, data)
+    return request.post(`/community-user/${id}/mute`, data)
   },
 }

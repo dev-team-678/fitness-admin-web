@@ -1,16 +1,16 @@
 import request from '../request'
 
 export const roleApi = {
-  list() {
-    return request.get('/roles')
+  list(params?: Record<string, unknown>) {
+    return request.get('/admin-role/list', { params })
   },
   create(data: { name: string; permissions: string[] }) {
-    return request.post('/roles', data)
+    return request.post('/admin-role', data)
   },
   update(id: number, data: { name: string; permissions: string[] }) {
-    return request.put(`/roles/${id}`, data)
+    return request.put(`/admin-role/${id}`, data)
   },
   delete(id: number) {
-    return request.delete(`/roles/${id}`)
+    return request.delete(`/admin-role/${id}`)
   },
 }

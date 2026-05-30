@@ -2,24 +2,24 @@ import request from '../request'
 
 export const workoutAnalyticsApi = {
   overview(params?: Record<string, unknown>) {
-    return request.get('/analytics/workout-overview', { params })
+    return request.get('/workout-record/overview', { params })
   },
   trend(params?: Record<string, unknown>) {
-    return request.get('/analytics/workout-trend', { params })
+    return request.get('/workout-record/trend', { params })
   },
   peakHours(params?: Record<string, unknown>) {
-    return request.get('/analytics/peak-hours', { params })
+    return request.get('/workout-record/peak-hours', { params })
   },
   exercisePopularity(params?: Record<string, unknown>) {
-    return request.get('/analytics/exercise-popularity', { params })
+    return request.get('/workout-record/exercise-popularity', { params })
   },
   planFunnel(params?: Record<string, unknown>) {
-    return request.get('/analytics/plan-funnel', { params })
+    return request.get('/workout-record/plan-funnel', { params })
   },
   records(params: Record<string, unknown>) {
-    return request.get('/workout-records', { params })
+    return request.get('/workout-record/list', { params })
   },
   exportRecords(params?: Record<string, unknown>) {
-    return request.get('/workout-records/export', { params, responseType: 'blob' })
+    return request.get('/workout-record/export', { params, responseType: 'blob' })
   },
 }

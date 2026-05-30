@@ -2,12 +2,12 @@ import request from '../request'
 
 export const postApi = {
   list(params: Record<string, unknown>) {
-    return request.get('/community/posts', { params })
+    return request.get('/community-post/list', { params })
   },
   updateStatus(id: number, data: { status: number }) {
-    return request.put(`/community/posts/${id}/status`, data)
+    return request.put(`/community-post/${id}/status`, data)
   },
   togglePin(id: number, data: { pinned: boolean }) {
-    return request.put(`/community/posts/${id}/pin`, data)
+    return request.put(`/community-post/${id}/pin`, data)
   },
 }
