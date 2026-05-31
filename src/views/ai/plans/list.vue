@@ -3,36 +3,37 @@
     <el-row :gutter="16" class="stats-row">
       <el-col :span="8">
         <el-card shadow="never" class="stat-card">
-          <div class="stat-value">{{ stats.totalGenerated }}</div>
+          <div class="stat-value">{{ stats.total }}</div>
           <div class="stat-label">总生成计划数</div>
         </el-card>
       </el-col>
       <el-col :span="8">
         <el-card shadow="never" class="stat-card stat-confirm">
-          <div class="stat-value">{{ stats.confirmationRate }}%</div>
-          <div class="stat-label">确认率</div>
+          <div class="stat-value">{{ stats.converted }}</div>
+          <div class="stat-label">已转化数</div>
         </el-card>
       </el-col>
       <el-col :span="8">
         <el-card shadow="never" class="stat-card stat-complete">
-          <div class="stat-value">{{ stats.completionRate }}%</div>
-          <div class="stat-label">完成率</div>
+          <div class="stat-value">{{ stats.conversionRate }}%</div>
+          <div class="stat-label">转化率</div>
         </el-card>
       </el-col>
     </el-row>
 
     <el-card shadow="never" class="filter-card">
       <el-form :inline="true" :model="filters" @submit.prevent="handleSearch">
-        <el-form-item label="用户">
-          <el-input v-model="filters.userName" placeholder="用户名/ID" clearable @clear="handleSearch" />
+        <el-form-item label="用户 ID">
+          <el-input v-model="filters.userId" placeholder="用户 ID" clearable @clear="handleSearch" />
         </el-form-item>
-        <el-form-item label="训练目标">
-          <el-select v-model="filters.goal" placeholder="全部" clearable @change="handleSearch">
-            <el-option label="增肌" value="muscle_gain" />
-            <el-option label="减脂" value="fat_loss" />
-            <el-option label="力量" value="strength" />
-            <el-option label="耐力" value="endurance" />
-            <el-option label="柔韧性" value="flexibility" />
+        <el-form-item label="状态">
+          <el-select v-model="filters.status" placeholder="全部" clearable @change="handleSearch">
+            <el-option label="草稿" value="draft" />
+            <el-option label="待确认" value="pending" />
+            <el-option label="已确认" value="confirmed" />
+            <el-option label="进行中" value="active" />
+            <el-option label="已完成" value="completed" />
+            <el-option label="已取消" value="cancelled" />
           </el-select>
         </el-form-item>
         <el-form-item label="训练分化">
@@ -41,15 +42,6 @@
             <el-option label="上/下肢" value="upper_lower" />
             <el-option label="推/拉/腿" value="push_pull_legs" />
             <el-option label="身体部位" value="body_part" />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="状态">
-          <el-select v-model="filters.status" placeholder="全部" clearable @change="handleSearch">
-            <el-option label="待确认" value="pending" />
-            <el-option label="已确认" value="confirmed" />
-            <el-option label="进行中" value="active" />
-            <el-option label="已完成" value="completed" />
-            <el-option label="已取消" value="cancelled" />
           </el-select>
         </el-form-item>
         <el-form-item>
@@ -65,10 +57,10 @@
       </template>
 
       <el-table v-loading="loading" :data="tableData" border stripe>
-        <el-table-column prop="userName" label="用户" width="120" />
-        <el-table-column prop="goal" label="训练目标" width="100">
+        <el-table-column prop="userId" label="用户 ID" width="100" />
+        <el-table-column prop="fitnessGoal" label="训练目标" width="100">
           <template #default="{ row }">
-            <el-tag size="small">{{ goalText(row.goal) }}</el-tag>
+            <el-tag size="small">{{ goalText(row.fitnessGoal) }}</el-tag>
           </template>
         </el-table-column>
         <el-table-column prop="splitType" label="训练分化" width="110">
@@ -76,7 +68,7 @@
             {{ splitText(row.splitType) }}
           </template>
         </el-table-column>
-        <el-table-column prop="weeks" label="周期(周)" width="90" align="center" />
+        <el-table-column prop="daysPerWeek" label="天/周" width="80" align="center" />
         <el-table-column prop="status" label="状态" width="100">
           <template #default="{ row }">
             <el-tag :type="statusType(row.status)" size="small">{{ statusText(row.status) }}</el-tag>
@@ -123,17 +115,16 @@ import { useTableSearch } from '@/composables/useTableSearch'
 const router = useRouter()
 
 const stats = reactive({
-  totalGenerated: 0,
-  confirmationRate: 0,
-  completionRate: 0,
+  total: 0,
+  converted: 0,
+  conversionRate: 0,
 })
 
 const { loading, tableData, pagination, loadData, handleCurrentChange, handleSizeChange, resetPage } =
   usePagination(aiPlanApi.list)
 
 const { filters, getSearchParams, resetFilters } = useTableSearch({
-  userName: '',
-  goal: '',
+  userId: '',
   splitType: '',
   status: '',
 })
@@ -204,7 +195,7 @@ async function handleConvert(row: { id: number }) {
 
 async function loadStats() {
   const res = (await aiPlanApi.stats()) as unknown as {
-    data: { totalGenerated: number; confirmationRate: number; completionRate: number }
+    data: { total: number; converted: number; conversionRate: number }
   }
   Object.assign(stats, res.data)
 }

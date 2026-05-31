@@ -7,6 +7,9 @@
           <div>
             <el-button type="primary" @click="handleAdd">新增规则</el-button>
             <el-button @click="openTestDialog">测试规则</el-button>
+            <el-button circle @click="loadData">
+              <el-icon :class="{ 'is-loading': loading }"><Refresh /></el-icon>
+            </el-button>
           </div>
         </div>
       </template>
@@ -31,9 +34,9 @@
           </template>
         </el-table-column>
         <el-table-column prop="priority" label="优先级" width="80" align="center" />
-        <el-table-column prop="enabled" label="状态" width="80" align="center">
+        <el-table-column prop="isEnabled" label="状态" width="80" align="center">
           <template #default="{ row }">
-            <el-switch v-model="row.enabled" @change="handleToggle(row)" />
+            <el-switch v-model="row.isEnabled" :active-value="1" :inactive-value="0" @change="handleToggle(row)" />
           </template>
         </el-table-column>
         <el-table-column label="操作" width="160" fixed="right">
@@ -88,6 +91,7 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { Refresh } from '@element-plus/icons-vue'
 import { safetyApi } from '@/api/ai/safety'
 import { usePagination } from '@/composables/usePagination'
 
@@ -132,11 +136,11 @@ function actionText(action: string) {
 }
 
 function handleAdd() {
-  router.push('/ai/safety/create')
+  router.push('/ai/safety/rules/create')
 }
 
 function handleEdit(row: { id: number }) {
-  router.push(`/ai/safety/edit/${row.id}`)
+  router.push(`/ai/safety/rules/edit/${row.id}`)
 }
 
 async function handleDelete(row: { id: number; pattern: string }) {
@@ -146,9 +150,9 @@ async function handleDelete(row: { id: number; pattern: string }) {
   loadData()
 }
 
-async function handleToggle(row: { id: number; enabled: boolean }) {
-  await safetyApi.updateRule(row.id, { enabled: row.enabled })
-  ElMessage.success(row.enabled ? '已启用' : '已禁用')
+async function handleToggle(row: { id: number; isEnabled: number }) {
+  await safetyApi.updateRule(row.id, { isEnabled: row.isEnabled })
+  ElMessage.success(row.isEnabled ? '已启用' : '已禁用')
 }
 
 function openTestDialog() {

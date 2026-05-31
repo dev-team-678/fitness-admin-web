@@ -5,8 +5,12 @@
         <el-form-item label="用户 ID">
           <el-input v-model="filters.userId" placeholder="请输入用户 ID" clearable />
         </el-form-item>
-        <el-form-item label="计划名称">
-          <el-input v-model="filters.planName" placeholder="请输入计划名称" clearable />
+        <el-form-item label="状态">
+          <el-select v-model="filters.status" placeholder="全部" clearable style="width: 120px">
+            <el-option label="进行中" value="in_progress" />
+            <el-option label="已完成" value="completed" />
+            <el-option label="已取消" value="cancelled" />
+          </el-select>
         </el-form-item>
         <el-form-item label="日期范围">
           <el-date-picker
@@ -29,19 +33,18 @@
     <el-card shadow="never">
       <el-table :data="tableData" v-loading="loading" stripe border>
         <el-table-column prop="userId" label="用户 ID" width="100" />
-        <el-table-column prop="userName" label="用户名称" width="120" />
-        <el-table-column prop="planName" label="训练计划" min-width="150" show-overflow-tooltip />
-        <el-table-column prop="date" label="训练日期" width="120" />
-        <el-table-column prop="duration" label="时长 (min)" width="100" sortable />
-        <el-table-column prop="totalVolume" label="训练量 (kg)" width="120" sortable />
+        <el-table-column prop="planId" label="计划 ID" width="100" />
+        <el-table-column prop="workoutDate" label="训练日期" width="120" />
+        <el-table-column prop="durationMin" label="时长 (min)" width="100" sortable />
+        <el-table-column prop="totalVolumeKg" label="训练量 (kg)" width="120" sortable />
+        <el-table-column prop="totalSets" label="总组数" width="80" />
         <el-table-column prop="status" label="状态" width="90">
           <template #default="{ row }">
-            <el-tag :type="row.status === 1 ? 'success' : row.status === 2 ? 'warning' : 'info'" size="small">
-              {{ statusMap[row.status as number] || '未知' }}
+            <el-tag :type="statusTagType(row.status)" size="small">
+              {{ statusMap[row.status as string] || '未知' }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="exercisesSummary" label="动作摘要" min-width="200" show-overflow-tooltip />
       </el-table>
 
       <el-pagination
@@ -66,10 +69,15 @@ import { workoutAnalyticsApi } from '@/api/workout/analytics'
 import { usePagination } from '@/composables/usePagination'
 import { useTableSearch } from '@/composables/useTableSearch'
 
-const statusMap: Record<number, string> = {
-  0: '未开始',
-  1: '已完成',
-  2: '进行中',
+const statusMap: Record<string, string> = {
+  in_progress: '进行中',
+  completed: '已完成',
+  cancelled: '已取消',
+}
+
+function statusTagType(status: string) {
+  const map: Record<string, string> = { completed: 'success', in_progress: 'warning', cancelled: 'info' }
+  return (map[status] || 'info') as 'success' | 'warning' | 'info'
 }
 
 const { loading, tableData, pagination, loadData, handleCurrentChange, handleSizeChange, resetPage } =
@@ -77,7 +85,7 @@ const { loading, tableData, pagination, loadData, handleCurrentChange, handleSiz
 
 const { filters, getSearchParams, resetFilters } = useTableSearch({
   userId: '',
-  planName: '',
+  status: '',
 })
 
 const dateRange = ref<[string, string] | null>(null)

@@ -10,16 +10,16 @@
 
       <el-table v-loading="loading" :data="tableData" border stripe>
         <el-table-column prop="name" label="模板名称" min-width="200" show-overflow-tooltip />
-        <el-table-column prop="currentVersion" label="当前版本" width="100" align="center">
+        <el-table-column prop="version" label="当前版本" width="100" align="center">
           <template #default="{ row }">
-            <el-tag size="small">v{{ row.currentVersion }}</el-tag>
+            <el-tag size="small">v{{ row.version }}</el-tag>
           </template>
         </el-table-column>
         <el-table-column prop="updatedAt" label="最后更新" width="180" />
-        <el-table-column prop="enabled" label="状态" width="80" align="center">
+        <el-table-column prop="isActive" label="状态" width="80" align="center">
           <template #default="{ row }">
-            <el-tag :type="row.enabled ? 'success' : 'info'" size="small">
-              {{ row.enabled ? '启用' : '禁用' }}
+            <el-tag :type="row.isActive === 1 ? 'success' : 'info'" size="small">
+              {{ row.isActive === 1 ? '启用' : '禁用' }}
             </el-tag>
           </template>
         </el-table-column>
@@ -95,16 +95,16 @@ const currentVersion = ref(0)
 const selectedPromptId = ref(0)
 
 function handleAdd() {
-  router.push('/ai/prompts/create')
+  router.push('/ai/safety/prompts/edit/0')
 }
 
 function handleEdit(row: { id: number }) {
-  router.push(`/ai/prompts/edit/${row.id}`)
+  router.push(`/ai/safety/prompts/edit/${row.id}`)
 }
 
-async function handleViewVersions(row: { id: number; currentVersion: number }) {
+async function handleViewVersions(row: { id: number; version: number }) {
   selectedPromptId.value = row.id
-  currentVersion.value = row.currentVersion
+  currentVersion.value = row.version
   versionsDialogVisible.value = true
   const res = (await promptApi.versions(row.id)) as unknown as { data: Version[] }
   versions.value = res.data || []

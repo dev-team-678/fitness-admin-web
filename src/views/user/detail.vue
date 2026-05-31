@@ -15,16 +15,16 @@
       </template>
       <div class="basic-info">
         <div class="avatar-section">
-          <el-avatar v-if="user.avatar" :src="user.avatar" :size="80" />
+          <el-avatar v-if="user.avatarUrl" :src="user.avatarUrl" :size="80" />
           <el-avatar v-else :size="80">
             <el-icon :size="36"><User /></el-icon>
           </el-avatar>
           <el-tag
-            :type="user.status === 'active' ? 'success' : 'danger'"
+            :type="user.status === 1 ? 'success' : 'danger'"
             effect="light"
             class="status-tag"
           >
-            {{ user.status === 'active' ? '正常' : '已禁用' }}
+            {{ user.status === 1 ? '正常' : '已禁用' }}
           </el-tag>
         </div>
         <el-descriptions :column="3" border>
@@ -36,12 +36,12 @@
           <el-descriptions-item label="性别">
             {{ user.gender === 1 ? '男' : user.gender === 2 ? '女' : '未知' }}
           </el-descriptions-item>
-          <el-descriptions-item label="年龄">{{ user.age ? `${user.age}岁` : '-' }}</el-descriptions-item>
-          <el-descriptions-item label="注册时间">{{ user.created_at || '-' }}</el-descriptions-item>
-          <el-descriptions-item label="健身目标">{{ formatGoal(user.goal) }}</el-descriptions-item>
-          <el-descriptions-item label="健身水平">{{ formatLevel(user.level) }}</el-descriptions-item>
-          <el-descriptions-item label="训练频率">{{ user.frequency || '-' }}</el-descriptions-item>
-          <el-descriptions-item label="训练时长">{{ user.duration || '-' }}</el-descriptions-item>
+          <el-descriptions-item label="生日">{{ user.birthday || '-' }}</el-descriptions-item>
+          <el-descriptions-item label="注册时间">{{ user.createdAt || '-' }}</el-descriptions-item>
+          <el-descriptions-item label="健身目标">{{ formatGoal(user.fitnessGoal) }}</el-descriptions-item>
+          <el-descriptions-item label="健身水平">{{ formatLevel(user.fitnessLevel) }}</el-descriptions-item>
+          <el-descriptions-item label="训练频率">{{ user.workoutDaysPerWeek ? `${user.workoutDaysPerWeek}天/周` : '-' }}</el-descriptions-item>
+          <el-descriptions-item label="训练时长">{{ user.workoutDurationMin ? `${user.workoutDurationMin}分钟` : '-' }}</el-descriptions-item>
         </el-descriptions>
       </div>
     </el-card>
@@ -49,37 +49,31 @@
     <!-- Training Stats Card -->
     <el-card shadow="never" class="detail-card">
       <template #header>
-        <span class="card-title">训练统计</span>
+        <span class="card-title">身体数据</span>
       </template>
       <el-row :gutter="20">
-        <el-col :span="4" :xs="12" :sm="8" :md="4">
+        <el-col :span="6" :xs="12" :sm="8" :md="6">
           <div class="stat-item">
-            <div class="stat-value">{{ stats.total_workouts ?? '-' }}</div>
-            <div class="stat-label">总训练次数</div>
+            <div class="stat-value">{{ user.heightCm ?? '-' }}</div>
+            <div class="stat-label">身高(cm)</div>
           </div>
         </el-col>
-        <el-col :span="4" :xs="12" :sm="8" :md="4">
+        <el-col :span="6" :xs="12" :sm="8" :md="6">
           <div class="stat-item">
-            <div class="stat-value">{{ stats.total_duration ?? '-' }}</div>
-            <div class="stat-label">总训练时长(分钟)</div>
+            <div class="stat-value">{{ user.currentWeightKg ?? '-' }}</div>
+            <div class="stat-label">当前体重(kg)</div>
           </div>
         </el-col>
-        <el-col :span="4" :xs="12" :sm="8" :md="4">
+        <el-col :span="6" :xs="12" :sm="8" :md="6">
           <div class="stat-item">
-            <div class="stat-value">{{ stats.total_volume ?? '-' }}</div>
-            <div class="stat-label">总训练容量(kg)</div>
+            <div class="stat-value">{{ user.targetWeightKg ?? '-' }}</div>
+            <div class="stat-label">目标体重(kg)</div>
           </div>
         </el-col>
-        <el-col :span="4" :xs="12" :sm="8" :md="4">
+        <el-col :span="6" :xs="12" :sm="8" :md="6">
           <div class="stat-item">
-            <div class="stat-value">{{ stats.streak_days ?? '-' }}</div>
-            <div class="stat-label">当前连续天数</div>
-          </div>
-        </el-col>
-        <el-col :span="4" :xs="12" :sm="8" :md="4">
-          <div class="stat-item">
-            <div class="stat-value">{{ stats.best_streak ?? '-' }}</div>
-            <div class="stat-label">最佳连续天数</div>
+            <div class="stat-value">{{ user.bmi ?? '-' }}</div>
+            <div class="stat-label">BMI</div>
           </div>
         </el-col>
       </el-row>
@@ -133,15 +127,14 @@
       <el-table :data="workouts" border stripe>
         <el-table-column prop="id" label="记录ID" width="90" align="center" />
         <el-table-column prop="name" label="训练名称" min-width="150" show-overflow-tooltip />
-        <el-table-column prop="started_at" label="开始时间" width="170" align="center" />
-        <el-table-column prop="duration" label="时长(分钟)" width="110" align="center" />
-        <el-table-column prop="volume" label="容量(kg)" width="110" align="center" />
-        <el-table-column prop="exercise_count" label="动作数" width="90" align="center" />
-        <el-table-column prop="set_count" label="组数" width="80" align="center" />
+        <el-table-column prop="startTime" label="开始时间" width="170" align="center" />
+        <el-table-column prop="durationMin" label="时长(分钟)" width="110" align="center" />
+        <el-table-column prop="totalVolumeKg" label="容量(kg)" width="110" align="center" />
+        <el-table-column prop="totalSets" label="组数" width="80" align="center" />
         <el-table-column label="状态" width="100" align="center">
           <template #default="{ row }">
-            <el-tag :type="row.completed ? 'success' : 'info'" effect="light" size="small">
-              {{ row.completed ? '已完成' : '未完成' }}
+            <el-tag :type="row.status === 'completed' ? 'success' : 'info'" effect="light" size="small">
+              {{ row.status === 'completed' ? '已完成' : row.status === 'in_progress' ? '进行中' : '已取消' }}
             </el-tag>
           </template>
         </el-table-column>
@@ -159,12 +152,12 @@
             {{ aiProfile.injuries || '无' }}
           </el-descriptions-item>
           <el-descriptions-item label="健康状态">
-            {{ aiProfile.health_status || '-' }}
+            {{ Array.isArray(aiProfile.healthConditions) ? aiProfile.healthConditions.join('、') : (aiProfile.healthConditions || '-') }}
           </el-descriptions-item>
           <el-descriptions-item label="可用器材" :span="2">
-            <div v-if="aiProfile.available_equipment && aiProfile.available_equipment.length">
+            <div v-if="aiProfile.availableEquipment && aiProfile.availableEquipment.length">
               <el-tag
-                v-for="eq in aiProfile.available_equipment"
+                v-for="eq in aiProfile.availableEquipment"
                 :key="eq"
                 class="equipment-tag"
                 effect="plain"
@@ -176,10 +169,10 @@
             <span v-else>-</span>
           </el-descriptions-item>
           <el-descriptions-item label="训练偏好" :span="2">
-            {{ aiProfile.training_preferences || '-' }}
+            {{ aiProfile.trainingPreferences || '-' }}
           </el-descriptions-item>
           <el-descriptions-item label="AI 备注" :span="2">
-            <div class="ai-notes">{{ aiProfile.ai_notes || '-' }}</div>
+            <div class="ai-notes">{{ aiProfile.aiNotes || '-' }}</div>
           </el-descriptions-item>
         </el-descriptions>
       </div>
@@ -197,8 +190,8 @@
       <el-table v-if="aiChats.length > 0" :data="aiChats" border stripe>
         <el-table-column prop="id" label="对话ID" width="100" align="center" />
         <el-table-column prop="title" label="主题" min-width="200" show-overflow-tooltip />
-        <el-table-column prop="message_count" label="消息数" width="100" align="center" />
-        <el-table-column prop="last_message_at" label="最后消息时间" width="170" align="center" />
+        <el-table-column prop="messageCount" label="消息数" width="100" align="center" />
+        <el-table-column prop="lastMessageTime" label="最后消息时间" width="170" align="center" />
         <el-table-column label="操作" width="100" align="center">
           <template #default="{ row }">
             <el-button link type="primary" @click="viewChat(row.id)">查看</el-button>
@@ -226,8 +219,13 @@ const pageLoading = ref(false)
 // User basic info
 const user = reactive<Record<string, any>>({})
 
-// Training stats
-const stats = reactive<Record<string, any>>({})
+// Training stats - derived from user detail response
+const stats = reactive<Record<string, any>>({
+  heightCm: null,
+  currentWeightKg: null,
+  targetWeightKg: null,
+  bmi: null,
+})
 
 // Achievements
 const achievements = ref<any[]>([])
@@ -244,12 +242,10 @@ const aiChats = ref<any[]>([])
 
 // Formatters
 const goalMap: Record<string, string> = {
-  fat_loss: '减脂',
-  muscle_gain: '增肌',
-  toning: '塑形',
-  fitness: '提升体能',
-  rehabilitation: '康复训练',
-  health: '保持健康',
+  lose_fat: '减脂',
+  gain_muscle: '增肌',
+  keep_fit: '保持健康',
+  improve_endurance: '提升耐力',
 }
 
 const levelMap: Record<string, string> = {
@@ -280,21 +276,7 @@ async function loadUserDetail() {
 }
 
 async function loadStats() {
-  try {
-    // Stats are part of the detail response or a separate endpoint
-    // Using detail response fields if available, or fetching separately
-    const res = (await userApi.detail(userId)) as any
-    const data = res.data || {}
-    Object.assign(stats, {
-      total_workouts: data.total_workouts,
-      total_duration: data.total_duration,
-      total_volume: data.total_volume,
-      streak_days: data.streak_days,
-      best_streak: data.best_streak,
-    })
-  } catch {
-    // ignore
-  }
+  // Stats are derived from user detail, no separate call needed
 }
 
 async function loadAchievements() {

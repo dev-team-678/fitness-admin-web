@@ -7,11 +7,8 @@
 
       <!-- Filters -->
       <el-form :model="filters" inline class="filter-form">
-        <el-form-item label="操作人">
-          <el-input v-model="filters.operator" placeholder="请输入操作人" clearable style="width: 160px" />
-        </el-form-item>
         <el-form-item label="操作类型">
-          <el-select v-model="filters.type" placeholder="全部" clearable style="width: 140px">
+          <el-select v-model="filters.action" placeholder="全部" clearable style="width: 140px">
             <el-option label="新增" value="CREATE" />
             <el-option label="更新" value="UPDATE" />
             <el-option label="删除" value="DELETE" />
@@ -41,26 +38,26 @@
 
       <el-table v-loading="loading" :data="tableData" border stripe>
         <el-table-column prop="id" label="ID" width="80" />
-        <el-table-column prop="operator" label="操作人" width="120" />
-        <el-table-column prop="type" label="操作类型" width="100">
+        <el-table-column prop="adminUserId" label="操作人 ID" width="100" />
+        <el-table-column prop="action" label="操作类型" width="100">
           <template #default="{ row }">
-            <el-tag :type="typeTagMap[row.type]">{{ row.type }}</el-tag>
+            <el-tag :type="typeTagMap[row.action]">{{ row.action }}</el-tag>
           </template>
         </el-table-column>
         <el-table-column prop="module" label="模块" width="120" />
         <el-table-column prop="targetId" label="目标ID" width="100" />
         <el-table-column label="详情" min-width="200">
           <template #default="{ row }">
-            <el-popover v-if="row.details" placement="left" :width="400" trigger="click">
+            <el-popover v-if="row.detail" placement="left" :width="400" trigger="click">
               <template #reference>
                 <el-button type="primary" link>查看详情</el-button>
               </template>
-              <pre class="json-detail">{{ formatJson(row.details) }}</pre>
+              <pre class="json-detail">{{ formatJson(row.detail) }}</pre>
             </el-popover>
             <span v-else>-</span>
           </template>
         </el-table-column>
-        <el-table-column prop="ip" label="IP" width="140" />
+        <el-table-column prop="ipAddress" label="IP" width="140" />
         <el-table-column prop="createdAt" label="操作时间" width="180" />
       </el-table>
 
@@ -94,8 +91,7 @@ const typeTagMap: Record<string, 'primary' | 'success' | 'warning' | 'info' | 'd
 }
 
 const { filters, getSearchParams, resetFilters } = useTableSearch({
-  operator: '',
-  type: '',
+  action: '',
   module: '',
   dateRange: null as string[] | null,
 })

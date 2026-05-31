@@ -20,7 +20,7 @@
           </el-select>
         </el-form-item>
         <el-form-item label="健身目标">
-          <el-select v-model="filters.goal" placeholder="全部" clearable style="width: 140px">
+          <el-select v-model="filters.fitnessGoal" placeholder="全部" clearable style="width: 140px">
             <el-option
               v-for="item in goalOptions"
               :key="item.value"
@@ -30,7 +30,7 @@
           </el-select>
         </el-form-item>
         <el-form-item label="健身水平">
-          <el-select v-model="filters.level" placeholder="全部" clearable style="width: 120px">
+          <el-select v-model="filters.fitnessLevel" placeholder="全部" clearable style="width: 120px">
             <el-option
               v-for="item in levelOptions"
               :key="item.value"
@@ -41,8 +41,8 @@
         </el-form-item>
         <el-form-item label="状态">
           <el-select v-model="filters.status" placeholder="全部" clearable style="width: 120px">
-            <el-option label="正常" value="active" />
-            <el-option label="已禁用" value="disabled" />
+            <el-option label="正常" :value="1" />
+            <el-option label="已禁用" :value="2" />
           </el-select>
         </el-form-item>
         <el-form-item label="注册时间">
@@ -83,8 +83,8 @@
           <template #default="{ row }">
             <div class="nickname-cell">
               <el-avatar
-                v-if="row.avatar"
-                :src="row.avatar"
+                v-if="row.avatarUrl"
+                :src="row.avatarUrl"
                 :size="32"
                 class="nickname-avatar"
               />
@@ -94,7 +94,7 @@
         </el-table-column>
         <el-table-column label="头像" width="80" align="center">
           <template #default="{ row }">
-            <el-avatar v-if="row.avatar" :src="row.avatar" :size="40" />
+            <el-avatar v-if="row.avatarUrl" :src="row.avatarUrl" :size="40" />
             <el-avatar v-else :size="40">
               <el-icon :size="20"><User /></el-icon>
             </el-avatar>
@@ -107,23 +107,21 @@
             <span v-else class="text-muted">未知</span>
           </template>
         </el-table-column>
-        <el-table-column prop="goal" label="健身目标" width="120" align="center">
+        <el-table-column prop="fitnessGoal" label="健身目标" width="120" align="center">
           <template #default="{ row }">
-            <span>{{ formatGoal(row.goal) }}</span>
+            <span>{{ formatGoal(row.fitnessGoal) }}</span>
           </template>
         </el-table-column>
-        <el-table-column prop="level" label="健身水平" width="100" align="center">
+        <el-table-column prop="fitnessLevel" label="健身水平" width="100" align="center">
           <template #default="{ row }">
-            <span>{{ formatLevel(row.level) }}</span>
+            <span>{{ formatLevel(row.fitnessLevel) }}</span>
           </template>
         </el-table-column>
-        <el-table-column prop="workout_count" label="训练次数" width="100" align="center" sortable />
-        <el-table-column prop="last_active_at" label="最后活跃" width="170" align="center" sortable />
-        <el-table-column prop="created_at" label="注册时间" width="170" align="center" sortable />
+        <el-table-column prop="createdAt" label="注册时间" width="170" align="center" sortable />
         <el-table-column label="状态" width="100" align="center">
           <template #default="{ row }">
-            <el-tag :type="row.status === 'active' ? 'success' : 'danger'" effect="light">
-              {{ row.status === 'active' ? '正常' : '已禁用' }}
+            <el-tag :type="row.status === 1 ? 'success' : 'danger'" effect="light">
+              {{ row.status === 1 ? '正常' : '已禁用' }}
             </el-tag>
           </template>
         </el-table-column>
@@ -133,10 +131,10 @@
             <el-button link type="primary" @click="handleEdit(row)">编辑</el-button>
             <el-button
               link
-              :type="row.status === 'active' ? 'danger' : 'success'"
+              :type="row.status === 1 ? 'danger' : 'success'"
               @click="handleToggleStatus(row)"
             >
-              {{ row.status === 'active' ? '禁用' : '启用' }}
+              {{ row.status === 1 ? '禁用' : '启用' }}
             </el-button>
           </template>
         </el-table-column>
@@ -240,10 +238,10 @@
     <transition name="slide-up">
       <div v-if="selectedRows.length > 0" class="batch-bar">
         <span class="batch-count">已选 {{ selectedRows.length }} 人</span>
-        <el-button type="danger" :loading="batchLoading" @click="handleBatchStatus('disabled')">
+        <el-button type="danger" :loading="batchLoading" @click="handleBatchStatus(2)">
           批量禁用
         </el-button>
-        <el-button type="success" :loading="batchLoading" @click="handleBatchStatus('active')">
+        <el-button type="success" :loading="batchLoading" @click="handleBatchStatus(1)">
           批量启用
         </el-button>
         <el-button text @click="clearSelection">取消选择</el-button>
@@ -267,9 +265,9 @@ const router = useRouter()
 // Search filters
 const { filters, searchText, getSearchParams, resetFilters } = useTableSearch({
   gender: null as number | null,
-  goal: '' as string,
-  level: '' as string,
-  status: '' as string,
+  fitnessGoal: '' as string,
+  fitnessLevel: '' as string,
+  status: null as number | null,
   dateRange: null as [string, string] | null,
 })
 
@@ -281,8 +279,8 @@ const { loading, tableData, pagination, loadData, handleCurrentChange, handleSiz
     const { dateRange, ...rest } = searchParams
     const extra: Record<string, unknown> = { ...rest }
     if (dateRange && Array.isArray(dateRange)) {
-      extra.start_date = dateRange[0]
-      extra.end_date = dateRange[1]
+      extra.startDate = dateRange[0]
+      extra.endDate = dateRange[1]
     }
     const res = await userApi.list({ ...params, ...extra })
     return res
@@ -294,12 +292,10 @@ const batchLoading = ref(false)
 
 // Filter options
 const goalOptions = [
-  { label: '减脂', value: 'fat_loss' },
-  { label: '增肌', value: 'muscle_gain' },
-  { label: '塑形', value: 'toning' },
-  { label: '提升体能', value: 'fitness' },
-  { label: '康复训练', value: 'rehabilitation' },
-  { label: '保持健康', value: 'health' },
+  { label: '减脂', value: 'lose_fat' },
+  { label: '增肌', value: 'gain_muscle' },
+  { label: '保持健康', value: 'keep_fit' },
+  { label: '提升耐力', value: 'improve_endurance' },
 ]
 
 const levelOptions = [
@@ -309,12 +305,10 @@ const levelOptions = [
 ]
 
 const goalMap: Record<string, string> = {
-  fat_loss: '减脂',
-  muscle_gain: '增肌',
-  toning: '塑形',
-  fitness: '提升体能',
-  rehabilitation: '康复训练',
-  health: '保持健康',
+  lose_fat: '减脂',
+  gain_muscle: '增肌',
+  keep_fit: '保持健康',
+  improve_endurance: '提升耐力',
 }
 
 const levelMap: Record<string, string> = {
@@ -422,8 +416,8 @@ function goDetail(id: number) {
 }
 
 async function handleToggleStatus(row: any) {
-  const newStatus = row.status === 'active' ? 'disabled' : 'active'
-  const actionText = newStatus === 'disabled' ? '禁用' : '启用'
+  const newStatus = row.status === 1 ? 2 : 1
+  const actionText = newStatus === 2 ? '禁用' : '启用'
   try {
     await ElMessageBox.confirm(`确定要${actionText}用户「${row.nickname || row.id}」吗？`, '确认操作', {
       confirmButtonText: '确定',
@@ -438,8 +432,8 @@ async function handleToggleStatus(row: any) {
   }
 }
 
-async function handleBatchStatus(status: string) {
-  const actionText = status === 'disabled' ? '禁用' : '启用'
+async function handleBatchStatus(status: number) {
+  const actionText = status === 2 ? '禁用' : '启用'
   const ids = selectedRows.value.map((r) => r.id)
   try {
     await ElMessageBox.confirm(
@@ -448,7 +442,7 @@ async function handleBatchStatus(status: string) {
       { confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning' },
     )
     batchLoading.value = true
-    await userApi.batchStatus({ user_ids: ids, status })
+    await userApi.batchStatus({ userIds: ids, status })
     ElMessage.success(`已批量${actionText}`)
     selectedRows.value = []
     loadData()

@@ -13,24 +13,24 @@
           />
         </el-form-item>
         <el-form-item label="难度">
-          <el-select v-model="filters.difficulty" placeholder="全部" clearable style="width: 120px">
-            <el-option label="初级" :value="1" />
-            <el-option label="中级" :value="2" />
-            <el-option label="高级" :value="3" />
+          <el-select v-model="filters.difficultyLevel" placeholder="全部" clearable style="width: 120px">
+            <el-option label="初级" value="beginner" />
+            <el-option label="中级" value="intermediate" />
+            <el-option label="高级" value="advanced" />
           </el-select>
         </el-form-item>
         <el-form-item label="目标">
-          <el-select v-model="filters.goal" placeholder="全部" clearable style="width: 140px">
-            <el-option label="增肌" value="muscle_gain" />
-            <el-option label="减脂" value="fat_loss" />
-            <el-option label="塑形" value="toning" />
-            <el-option label="力量" value="strength" />
-            <el-option label="耐力" value="endurance" />
-            <el-option label="灵活性" value="flexibility" />
+          <el-select v-model="filters.fitnessGoal" placeholder="全部" clearable style="width: 140px">
+            <el-option label="减脂" value="lose_fat" />
+            <el-option label="增肌" value="gain_muscle" />
+            <el-option label="保持健康" value="keep_fit" />
           </el-select>
         </el-form-item>
         <el-form-item label="AI 生成">
-          <el-switch v-model="filters.ai_generated" />
+          <el-select v-model="filters.aiGenerated" placeholder="全部" clearable style="width: 100px">
+            <el-option label="是" :value="1" />
+            <el-option label="否" :value="0" />
+          </el-select>
         </el-form-item>
         <el-form-item>
           <el-button type="primary" @click="handleSearch">
@@ -64,26 +64,25 @@
         style="width: 100%"
       >
         <el-table-column prop="name" label="计划名称" min-width="180" show-overflow-tooltip />
-        <el-table-column prop="difficulty" label="难度" width="90" align="center">
+        <el-table-column prop="difficultyLevel" label="难度" width="90" align="center">
           <template #default="{ row }">
-            <el-tag :type="difficultyTagType(row.difficulty)" size="small">
-              {{ difficultyLabel(row.difficulty) }}
+            <el-tag :type="difficultyTagType(row.difficultyLevel)" size="small">
+              {{ difficultyLabel(row.difficultyLevel) }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="goal" label="目标" width="90" align="center">
+        <el-table-column prop="fitnessGoal" label="目标" width="90" align="center">
           <template #default="{ row }">
-            <el-tag type="info" size="small">{{ goalLabel(row.goal) }}</el-tag>
+            <el-tag type="info" size="small">{{ goalLabel(row.fitnessGoal) }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="weeks" label="周数" width="70" align="center" />
-        <el-table-column prop="days_per_week" label="天/周" width="70" align="center" />
-        <el-table-column prop="avg_duration" label="平均时长" width="100" align="center">
+        <el-table-column prop="durationWeeks" label="周数" width="70" align="center" />
+        <el-table-column prop="daysPerWeek" label="天/周" width="70" align="center" />
+        <el-table-column prop="avgDurationMin" label="平均时长" width="100" align="center">
           <template #default="{ row }">
-            {{ row.avg_duration ? `${row.avg_duration}分钟` : '-' }}
+            {{ row.avgDurationMin ? `${row.avgDurationMin}分钟` : '-' }}
           </template>
         </el-table-column>
-        <el-table-column prop="participants" label="参与人数" width="90" align="center" />
         <el-table-column prop="status" label="状态" width="90" align="center">
           <template #default="{ row }">
             <el-tag :type="row.status === 1 ? 'success' : 'info'" size="small">
@@ -144,32 +143,29 @@ import { useTableSearch } from '@/composables/useTableSearch'
 const router = useRouter()
 
 const { filters, searchText, getSearchParams, resetFilters } = useTableSearch({
-  difficulty: '',
-  goal: '',
-  ai_generated: false,
+  difficultyLevel: '',
+  fitnessGoal: '',
+  aiGenerated: null as number | null,
 })
 
 const { loading, tableData, pagination, loadData, handleCurrentChange, handleSizeChange, resetPage } =
   usePagination((params) => planApi.list({ ...params, ...getSearchParams() }))
 
-function difficultyLabel(val: number) {
-  const map: Record<number, string> = { 1: '初级', 2: '中级', 3: '高级' }
+function difficultyLabel(val: string) {
+  const map: Record<string, string> = { beginner: '初级', intermediate: '中级', advanced: '高级' }
   return map[val] || '-'
 }
 
-function difficultyTagType(val: number) {
-  const map: Record<number, string> = { 1: 'success', 2: 'warning', 3: 'danger' }
+function difficultyTagType(val: string) {
+  const map: Record<string, string> = { beginner: 'success', intermediate: 'warning', advanced: 'danger' }
   return (map[val] || 'info') as 'success' | 'warning' | 'danger' | 'info'
 }
 
 function goalLabel(val: string) {
   const map: Record<string, string> = {
-    muscle_gain: '增肌',
-    fat_loss: '减脂',
-    toning: '塑形',
-    strength: '力量',
-    endurance: '耐力',
-    flexibility: '灵活性',
+    lose_fat: '减脂',
+    gain_muscle: '增肌',
+    keep_fit: '保持健康',
   }
   return map[val] || val || '-'
 }
@@ -185,11 +181,11 @@ function handleReset() {
 }
 
 function handleCreate() {
-  router.push('/plan/create')
+  router.push('/content/plan/create')
 }
 
 function handleEdit(row: any) {
-  router.push(`/plan/edit/${row.id}`)
+  router.push(`/content/plan/edit/${row.id}`)
 }
 
 async function handleCopy(row: any) {

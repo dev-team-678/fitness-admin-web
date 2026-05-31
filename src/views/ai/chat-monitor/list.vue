@@ -60,22 +60,16 @@
       </template>
 
       <el-table v-loading="loading" :data="tableData" border stripe>
-        <el-table-column prop="sessionId" label="会话ID" width="180" show-overflow-tooltip />
-        <el-table-column prop="userName" label="用户" width="120" />
+        <el-table-column prop="id" label="会话ID" width="80" />
+        <el-table-column prop="userId" label="用户ID" width="90" align="center" />
+        <el-table-column prop="title" label="会话标题" min-width="200" show-overflow-tooltip />
+        <el-table-column prop="sessionType" label="会话类型" width="100" align="center" />
         <el-table-column prop="messageCount" label="消息数" width="90" align="center" />
-        <el-table-column label="反馈" width="140" align="center">
+        <el-table-column prop="updatedAt" label="最后更新" width="180" />
+        <el-table-column prop="status" label="状态" width="90" align="center">
           <template #default="{ row }">
-            <span class="feedback-cell">
-              <el-icon color="#67C23A"><Top /></el-icon> {{ row.thumbsUp }}
-              <el-icon color="#F56C6C" style="margin-left: 12px"><Bottom /></el-icon> {{ row.thumbsDown }}
-            </span>
-          </template>
-        </el-table-column>
-        <el-table-column prop="lastMessageTime" label="最后消息时间" width="180" />
-        <el-table-column prop="status" label="状态" width="100">
-          <template #default="{ row }">
-            <el-tag :type="row.status === 'active' ? 'success' : 'info'" size="small">
-              {{ row.status === 'active' ? '进行中' : '已结束' }}
+            <el-tag :type="row.status === 1 ? 'success' : 'info'" size="small">
+              {{ row.status === 1 ? '进行中' : '已结束' }}
             </el-tag>
           </template>
         </el-table-column>
@@ -103,7 +97,6 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { Top, Bottom } from '@element-plus/icons-vue'
 import { chatMonitorApi } from '@/api/ai/chat-monitor'
 import { usePagination } from '@/composables/usePagination'
 import { useTableSearch } from '@/composables/useTableSearch'
@@ -195,13 +188,6 @@ onMounted(() => {
 
 .filter-card {
   margin-bottom: 16px;
-}
-
-.feedback-cell {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 14px;
 }
 
 .pagination {

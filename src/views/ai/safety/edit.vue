@@ -51,7 +51,7 @@
 
         <el-form-item label="回复模板">
           <el-input
-            v-model="form.replyTemplate"
+            v-model="form.responseTemplate"
             type="textarea"
             :rows="3"
             placeholder="匹配后的回复模板（可选，支持 {reason} 变量）"
@@ -73,12 +73,12 @@
         </el-form-item>
 
         <el-form-item v-if="form.matchMode === 'regex'" label="正则超时(ms)">
-          <el-input-number v-model="form.regexTimeout" :min="100" :max="10000" :step="100" />
+          <el-input-number v-model="form.regexTimeoutMs" :min="100" :max="10000" :step="100" />
           <span class="form-hint">防止正则回溯导致性能问题</span>
         </el-form-item>
 
         <el-form-item label="启用状态">
-          <el-switch v-model="form.enabled" active-text="启用" inactive-text="禁用" />
+          <el-switch v-model="form.isEnabled" :active-value="1" :inactive-value="0" active-text="启用" inactive-text="禁用" />
         </el-form-item>
 
         <el-form-item>
@@ -109,11 +109,11 @@ const form = reactive({
   matchMode: 'keyword',
   pattern: '',
   action: '',
-  replyTemplate: '',
+  responseTemplate: '',
   description: '',
   priority: 10,
-  regexTimeout: 1000,
-  enabled: true,
+  regexTimeoutMs: 1000,
+  isEnabled: 1 as number,
 })
 
 const rules = {
@@ -143,7 +143,7 @@ async function handleSubmit() {
       await safetyApi.createRule({ ...form })
       ElMessage.success('创建成功')
     }
-    router.push('/ai/safety')
+    router.push('/ai/safety/rules')
   } catch {
     ElMessage.error('保存失败')
   } finally {
@@ -152,7 +152,7 @@ async function handleSubmit() {
 }
 
 function goBack() {
-  router.push('/ai/safety')
+  router.push('/ai/safety/rules')
 }
 
 onMounted(() => {

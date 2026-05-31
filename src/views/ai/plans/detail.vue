@@ -8,18 +8,18 @@
         </div>
       </template>
       <el-descriptions :column="3" border>
-        <el-descriptions-item label="用户">{{ plan.userName }}</el-descriptions-item>
+        <el-descriptions-item label="用户 ID">{{ plan.userId }}</el-descriptions-item>
         <el-descriptions-item label="训练目标">
-          <el-tag size="small">{{ goalText(plan.goal) }}</el-tag>
+          <el-tag size="small">{{ goalText(plan.fitnessGoal) }}</el-tag>
         </el-descriptions-item>
         <el-descriptions-item label="训练分化">{{ splitText(plan.splitType) }}</el-descriptions-item>
-        <el-descriptions-item label="周期">{{ plan.weeks }} 周</el-descriptions-item>
+        <el-descriptions-item label="每周天数">{{ plan.daysPerWeek }} 天/周</el-descriptions-item>
         <el-descriptions-item label="状态">
           <el-tag :type="statusType(plan.status)" size="small">{{ statusText(plan.status) }}</el-tag>
         </el-descriptions-item>
         <el-descriptions-item label="创建时间">{{ plan.createdAt }}</el-descriptions-item>
         <el-descriptions-item label="AI 说明" :span="3">
-          {{ plan.aiExplanation || '暂无说明' }}
+          {{ plan.explanation || '暂无说明' }}
         </el-descriptions-item>
       </el-descriptions>
     </el-card>
@@ -57,16 +57,15 @@
         <span>调整历史</span>
       </template>
       <el-table :data="adjustments" border>
-        <el-table-column prop="date" label="日期" width="180" />
-        <el-table-column prop="reason" label="调整原因" min-width="200" show-overflow-tooltip />
-        <el-table-column prop="changeAmount" label="调整幅度" width="120" align="center">
+        <el-table-column prop="createdAt" label="日期" width="180" />
+        <el-table-column prop="adjustmentReason" label="调整原因" min-width="200" show-overflow-tooltip />
+        <el-table-column prop="loadChangePct" label="调整幅度" width="120" align="center">
           <template #default="{ row }">
-            <span :style="{ color: row.changeAmount > 0 ? '#67C23A' : '#F56C6C' }">
-              {{ row.changeAmount > 0 ? '+' : '' }}{{ row.changeAmount }}%
+            <span :style="{ color: row.loadChangePct > 0 ? '#67C23A' : '#F56C6C' }">
+              {{ row.loadChangePct > 0 ? '+' : '' }}{{ row.loadChangePct }}%
             </span>
           </template>
         </el-table-column>
-        <el-table-column prop="createdAt" label="创建时间" width="180" />
       </el-table>
     </el-card>
 
@@ -131,9 +130,8 @@ interface DayPlan {
 
 interface Adjustment {
   id: number
-  date: string
-  reason: string
-  changeAmount: number
+  adjustmentReason: string
+  loadChangePct: number
   createdAt: string
 }
 
@@ -144,12 +142,12 @@ const rulesFormRef = ref<FormInstance>()
 const rulesSubmitting = ref(false)
 
 const plan = reactive({
-  userName: '',
-  goal: '',
+  userId: '',
+  fitnessGoal: '',
   splitType: '',
-  weeks: 0,
+  daysPerWeek: 0,
   status: '',
-  aiExplanation: '',
+  explanation: '',
   createdAt: '',
 })
 
@@ -209,10 +207,10 @@ function statusText(status: string) {
 
 async function loadPlan() {
   const res = (await aiPlanApi.detail(planId)) as unknown as {
-    data: typeof plan & { weeklyPlan: DayPlan[] }
+    data: typeof plan & { workoutDays?: DayPlan[] }
   }
   Object.assign(plan, res.data)
-  weeklyPlan.value = res.data.weeklyPlan || []
+  weeklyPlan.value = res.data.workoutDays || []
 }
 
 async function loadAdjustments() {

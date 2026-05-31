@@ -4,23 +4,20 @@
     <el-row :gutter="16" class="summary-row">
       <el-col :span="8">
         <el-card shadow="hover" class="summary-card">
-          <div class="summary-value">{{ statsData.dailyCount?.toLocaleString() ?? '--' }}</div>
+          <div class="summary-value">{{ statsData.todayCount?.toLocaleString() ?? '--' }}</div>
           <div class="summary-label">今日签到</div>
-          <div class="summary-rate">签到率 {{ statsData.dailyRate != null ? (statsData.dailyRate * 100).toFixed(1) + '%' : '--' }}</div>
         </el-card>
       </el-col>
       <el-col :span="8">
         <el-card shadow="hover" class="summary-card">
-          <div class="summary-value">{{ statsData.weeklyCount?.toLocaleString() ?? '--' }}</div>
-          <div class="summary-label">本周签到</div>
-          <div class="summary-rate">签到率 {{ statsData.weeklyRate != null ? (statsData.weeklyRate * 100).toFixed(1) + '%' : '--' }}</div>
+          <div class="summary-value">{{ statsData.days ?? '--' }}</div>
+          <div class="summary-label">统计天数</div>
         </el-card>
       </el-col>
       <el-col :span="8">
         <el-card shadow="hover" class="summary-card">
-          <div class="summary-value">{{ statsData.monthlyCount?.toLocaleString() ?? '--' }}</div>
-          <div class="summary-label">本月签到</div>
-          <div class="summary-rate">签到率 {{ statsData.monthlyRate != null ? (statsData.monthlyRate * 100).toFixed(1) + '%' : '--' }}</div>
+          <div class="summary-value">{{ statsData.dailyStats?.length ?? '--' }}</div>
+          <div class="summary-label">数据点数</div>
         </el-card>
       </el-col>
     </el-row>
@@ -50,14 +47,14 @@
           </template>
         </el-table-column>
         <el-table-column prop="userId" label="用户 ID" width="120" />
-        <el-table-column prop="userName" label="用户名称" min-width="140" />
-        <el-table-column prop="consecutiveDays" label="连续签到天数" width="140" sortable>
+        <el-table-column prop="nickname" label="用户名称" min-width="140" />
+        <el-table-column prop="streakDays" label="连续签到天数" width="140" sortable>
           <template #default="{ row }">
-            <span class="consecutive-days">{{ row.consecutiveDays }} 天</span>
+            <span class="consecutive-days">{{ row.streakDays }} 天</span>
           </template>
         </el-table-column>
-        <el-table-column prop="totalCheckins" label="总签到次数" width="120" sortable />
-        <el-table-column prop="lastCheckinDate" label="最近签到" width="120" />
+        <el-table-column prop="startDate" label="开始日期" width="120" />
+        <el-table-column prop="endDate" label="结束日期" width="120" />
       </el-table>
     </el-card>
   </div>
@@ -68,13 +65,10 @@ import { ref, reactive, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import * as echarts from 'echarts'
 import { checkinApi } from '@/api/achievement/checkin'
 
-const statsData = reactive<Record<string, number>>({
-  dailyCount: 0,
-  dailyRate: 0,
-  weeklyCount: 0,
-  weeklyRate: 0,
-  monthlyCount: 0,
-  monthlyRate: 0,
+const statsData = reactive<Record<string, unknown>>({
+  todayCount: 0,
+  days: 0,
+  dailyStats: [],
 })
 
 const trendType = ref('daily')
@@ -96,31 +90,22 @@ async function loadStats() {
 async function loadTrend() {
   try {
     const res = await checkinApi.stats({ type: trendType.value })
-    const data = (res as { data: { dates: string[]; counts: number[]; rates: number[] } }).data
+    const data = (res as { data: { dailyStats: { checkinDate: string; count: number }[] } }).data
     if (!trendChart) return
+    const dates = (data.dailyStats || []).map((d) => d.checkinDate)
+    const counts = (data.dailyStats || []).map((d) => d.count)
     trendChart.setOption({
       tooltip: { trigger: 'axis' },
-      legend: { data: ['签到人数', '签到率'] },
+      legend: { data: ['签到人数'] },
       grid: { left: 50, right: 50, bottom: 30, top: 40 },
-      xAxis: { type: 'category', data: data.dates },
-      yAxis: [
-        { type: 'value', name: '人数' },
-        { type: 'value', name: '签到率', max: 1, axisLabel: { formatter: '{value}' } },
-      ],
+      xAxis: { type: 'category', data: dates },
+      yAxis: { type: 'value', name: '人数' },
       series: [
         {
           name: '签到人数',
           type: 'bar',
-          data: data.counts,
+          data: counts,
           itemStyle: { color: '#E6A23C' },
-        },
-        {
-          name: '签到率',
-          type: 'line',
-          yAxisIndex: 1,
-          data: data.rates,
-          smooth: true,
-          itemStyle: { color: '#F56C6C' },
         },
       ],
     })

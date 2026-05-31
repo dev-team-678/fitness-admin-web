@@ -480,7 +480,7 @@ async function handleSave() {
       await planApi.create(payload)
       ElMessage.success('创建成功')
     }
-    router.push('/plan/list')
+    router.push('/content/plan/list')
   } catch {
     // handled by interceptor
   } finally {
@@ -489,7 +489,7 @@ async function handleSave() {
 }
 
 function goBack() {
-  router.push('/plan/list')
+  router.push('/content/plan/list')
 }
 
 // Load detail for edit

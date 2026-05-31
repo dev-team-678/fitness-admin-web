@@ -7,7 +7,7 @@
         </el-form-item>
         <el-form-item label="分类">
           <el-select v-model="filters.category" placeholder="全部" clearable @change="handleSearch">
-            <el-option v-for="cat in categories" :key="cat.id" :label="cat.name" :value="cat.id" />
+            <el-option v-for="cat in categories" :key="cat.code" :label="cat.name" :value="cat.code" />
           </el-select>
         </el-form-item>
         <el-form-item label="向量状态">
@@ -41,7 +41,7 @@
 
       <el-table v-loading="loading" :data="tableData" border stripe>
         <el-table-column prop="title" label="标题" min-width="200" show-overflow-tooltip />
-        <el-table-column prop="categoryName" label="分类" width="120" />
+        <el-table-column prop="category" label="分类" width="120" />
         <el-table-column prop="tags" label="标签" width="200">
           <template #default="{ row }">
             <el-tag v-for="tag in row.tags" :key="tag" size="small" class="tag-item">{{ tag }}</el-tag>
@@ -96,14 +96,13 @@ import { knowledgeApi } from '@/api/ai/knowledge'
 import { usePagination } from '@/composables/usePagination'
 import { useTableSearch } from '@/composables/useTableSearch'
 
-interface Category {
-  id: number
-  name: string
-  code: string
-}
-
 const router = useRouter()
 const fileInputRef = ref<HTMLInputElement>()
+interface Category {
+  id: number
+  code: string
+  name: string
+}
 const categories = ref<Category[]>([])
 
 const { loading, tableData, pagination, loadData, handleCurrentChange, handleSizeChange, resetPage } =

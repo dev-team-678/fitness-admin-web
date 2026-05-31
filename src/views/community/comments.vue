@@ -29,13 +29,12 @@
       <el-table :data="tableData" v-loading="loading" stripe border>
         <el-table-column prop="id" label="ID" width="80" />
         <el-table-column prop="content" label="评论内容" min-width="250" show-overflow-tooltip />
-        <el-table-column prop="userName" label="用户" width="120" />
+        <el-table-column prop="userId" label="用户 ID" width="100" />
         <el-table-column prop="postId" label="所属帖子" width="100">
           <template #default="{ row }">
             <el-button type="primary" link size="small">#{{ row.postId }}</el-button>
           </template>
         </el-table-column>
-        <el-table-column prop="postContent" label="帖子摘要" min-width="180" show-overflow-tooltip />
         <el-table-column prop="createdAt" label="评论时间" width="160" />
         <el-table-column label="操作" width="100" fixed="right">
           <template #default="{ row }">

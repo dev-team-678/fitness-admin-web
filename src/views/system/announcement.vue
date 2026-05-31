@@ -81,6 +81,15 @@
             <el-option label="活动" value="event" />
           </el-select>
         </el-form-item>
+        <el-form-item label="发布时间">
+          <el-date-picker
+            v-model="editForm.publishTime"
+            type="datetime"
+            placeholder="选择发布时间"
+            value-format="YYYY-MM-DD HH:mm:ss"
+            style="width: 100%"
+          />
+        </el-form-item>
         <el-form-item label="状态">
           <el-switch
             v-model="editForm.status"
@@ -140,6 +149,7 @@ const editForm = reactive({
   title: '',
   content: '',
   type: 'notice',
+  publishTime: '',
   status: 1,
 })
 
@@ -155,6 +165,7 @@ function handleCreate() {
   editForm.title = ''
   editForm.content = ''
   editForm.type = 'notice'
+  editForm.publishTime = ''
   editForm.status = 1
   dialogVisible.value = true
 }
@@ -165,6 +176,7 @@ function handleEdit(row: Announcement) {
   editForm.title = row.title
   editForm.content = row.content
   editForm.type = row.type
+  editForm.publishTime = row.publishTime || ''
   editForm.status = row.status
   dialogVisible.value = true
 }

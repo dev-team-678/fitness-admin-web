@@ -2,12 +2,24 @@ import axios from 'axios'
 import { ElMessage } from 'element-plus'
 import { getToken, removeToken } from '@/utils/auth'
 import router from '@/router'
+import JSONBig from 'json-bigint'
 
 const baseURL = import.meta.env.VITE_APP_BASE_API || '/api/admin/v1'
+
+const jsonBig = JSONBig({ storeAsString: true })
 
 const service = axios.create({
   baseURL,
   timeout: 30000,
+  transformResponse: [
+    (data) => {
+      try {
+        return jsonBig.parse(data)
+      } catch {
+        return data
+      }
+    },
+  ],
 })
 
 // Request interceptor: inject JWT

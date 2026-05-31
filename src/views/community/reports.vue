@@ -4,9 +4,9 @@
       <el-form :inline="true" :model="filters">
         <el-form-item label="状态">
           <el-select v-model="filters.status" placeholder="全部" clearable style="width: 120px">
-            <el-option label="待处理" :value="0" />
-            <el-option label="已处理" :value="1" />
-            <el-option label="已驳回" :value="2" />
+            <el-option label="待处理" value="pending" />
+            <el-option label="已处理" value="resolved" />
+            <el-option label="已驳回" value="dismissed" />
           </el-select>
         </el-form-item>
         <el-form-item label="日期范围">
@@ -29,30 +29,30 @@
     <el-card shadow="never">
       <el-table :data="tableData" v-loading="loading" stripe border>
         <el-table-column prop="id" label="ID" width="80" />
-        <el-table-column prop="reporterName" label="举报人" width="120" />
+        <el-table-column prop="reporterId" label="举报人 ID" width="100" />
         <el-table-column prop="targetType" label="举报目标" width="90">
           <template #default="{ row }">
             {{ targetTypeMap[row.targetType as string] || row.targetType }}
           </template>
         </el-table-column>
-        <el-table-column prop="targetContent" label="目标内容" min-width="200" show-overflow-tooltip />
+        <el-table-column prop="targetId" label="目标 ID" width="90" />
         <el-table-column prop="reason" label="举报原因" min-width="160" show-overflow-tooltip />
         <el-table-column prop="createdAt" label="举报时间" width="160" />
         <el-table-column prop="status" label="状态" width="90">
           <template #default="{ row }">
-            <el-tag :type="statusTagType[row.status as number]" size="small">
-              {{ statusMap[row.status as number] || '未知' }}
+            <el-tag :type="statusTagType[row.status as string]" size="small">
+              {{ statusMap[row.status as string] || '未知' }}
             </el-tag>
           </template>
         </el-table-column>
         <el-table-column label="操作" width="200" fixed="right">
           <template #default="{ row }">
-            <template v-if="row.status === 0">
+            <template v-if="row.status === 'pending'">
               <el-button type="success" link size="small" @click="handleConfirm(row)">确认违规</el-button>
               <el-button type="info" link size="small" @click="handleDismiss(row)">驳回</el-button>
             </template>
             <el-button
-              v-if="row.status !== 0"
+              v-if="row.status !== 'pending'"
               type="warning"
               link
               size="small"
@@ -108,16 +108,16 @@ import { reportApi } from '@/api/community/report'
 import { usePagination } from '@/composables/usePagination'
 import { useTableSearch } from '@/composables/useTableSearch'
 
-const statusMap: Record<number, string> = {
-  0: '待处理',
-  1: '已处理',
-  2: '已驳回',
+const statusMap: Record<string, string> = {
+  pending: '待处理',
+  resolved: '已处理',
+  dismissed: '已驳回',
 }
 
-const statusTagType: Record<number, 'primary' | 'success' | 'warning' | 'info' | 'danger'> = {
-  0: 'warning',
-  1: 'success',
-  2: 'info',
+const statusTagType: Record<string, 'primary' | 'success' | 'warning' | 'info' | 'danger'> = {
+  pending: 'warning',
+  resolved: 'success',
+  dismissed: 'info',
 }
 
 const targetTypeMap: Record<string, string> = {
@@ -171,7 +171,7 @@ async function handleConfirm(row: Record<string, unknown>) {
       cancelButtonText: '取消',
       type: 'warning',
     })
-    await reportApi.handle(row.id as number, { action: 'confirm' })
+    await reportApi.handle(row.id as number, { result: 'confirmed' })
     ElMessage.success('已处理')
     loadData(buildParams())
   } catch {
@@ -181,7 +181,7 @@ async function handleConfirm(row: Record<string, unknown>) {
 
 async function handleDismiss(row: Record<string, unknown>) {
   try {
-    await reportApi.handle(row.id as number, { action: 'dismiss' })
+    await reportApi.handle(row.id as number, { result: 'dismissed' })
     ElMessage.success('已驳回')
     loadData(buildParams())
   } catch {

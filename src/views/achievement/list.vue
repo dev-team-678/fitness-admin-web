@@ -17,11 +17,11 @@
       <el-table :data="tableData" v-loading="loading" stripe border>
         <el-table-column prop="name" label="成就名称" min-width="140" />
         <el-table-column prop="description" label="描述" min-width="200" show-overflow-tooltip />
-        <el-table-column prop="icon" label="图标" width="80">
+        <el-table-column prop="iconUrl" label="图标" width="80">
           <template #default="{ row }">
             <el-image
-              v-if="row.icon"
-              :src="row.icon"
+              v-if="row.iconUrl"
+              :src="row.iconUrl"
               style="width: 32px; height: 32px"
               fit="contain"
             />
@@ -34,13 +34,12 @@
           </template>
         </el-table-column>
         <el-table-column prop="conditionValue" label="条件值" width="100" />
-        <el-table-column prop="unlockCount" label="解锁人数" width="100" sortable />
         <el-table-column prop="badgeColor" label="徽章颜色" width="100">
           <template #default="{ row }">
             <el-color-picker v-model="row.badgeColor" size="small" disabled />
           </template>
         </el-table-column>
-        <el-table-column prop="sortWeight" label="排序权重" width="100" sortable />
+        <el-table-column prop="sortOrder" label="排序" width="80" sortable />
         <el-table-column label="操作" width="160" fixed="right">
           <template #default="{ row }">
             <el-button type="primary" link size="small" @click="handleEdit(row)">编辑</el-button>

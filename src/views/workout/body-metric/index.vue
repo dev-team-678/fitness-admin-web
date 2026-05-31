@@ -25,37 +25,34 @@
     <el-card shadow="never">
       <el-table :data="tableData" v-loading="loading" stripe border>
         <el-table-column prop="userId" label="用户 ID" width="100" />
-        <el-table-column prop="userName" label="用户名称" width="120" />
-        <el-table-column prop="date" label="记录日期" width="120" />
-        <el-table-column prop="weight" label="体重 (kg)" width="100" sortable />
-        <el-table-column prop="bodyFatRate" label="体脂率 (%)" width="110" sortable>
+        <el-table-column prop="recordDate" label="记录日期" width="120" />
+        <el-table-column prop="weightKg" label="体重 (kg)" width="100" sortable />
+        <el-table-column prop="bodyFatPct" label="体脂率 (%)" width="110" sortable>
           <template #default="{ row }">
-            {{ row.bodyFatRate != null ? (row.bodyFatRate * 100).toFixed(1) + '%' : '--' }}
+            {{ row.bodyFatPct != null ? row.bodyFatPct.toFixed(1) + '%' : '--' }}
           </template>
         </el-table-column>
-        <el-table-column prop="chest" label="胸围 (cm)" width="100" />
-        <el-table-column prop="waist" label="腰围 (cm)" width="100" />
-        <el-table-column prop="hip" label="臀围 (cm)" width="100" />
-        <el-table-column prop="arm" label="臂围 (cm)" width="100" />
-        <el-table-column prop="thigh" label="大腿围 (cm)" width="110" />
-        <el-table-column prop="isAbnormal" label="异常标记" width="90">
+        <el-table-column prop="chestCm" label="胸围 (cm)" width="100" />
+        <el-table-column prop="waistCm" label="腰围 (cm)" width="100" />
+        <el-table-column prop="hipCm" label="臀围 (cm)" width="100" />
+        <el-table-column label="臂围 (cm)" width="120">
           <template #default="{ row }">
-            <el-tag :type="row.isAbnormal ? 'danger' : 'success'" size="small">
-              {{ row.isAbnormal ? '异常' : '正常' }}
-            </el-tag>
+            <span v-if="row.leftArmCm">左{{ row.leftArmCm }}</span>
+            <span v-if="row.leftArmCm && row.rightArmCm"> / </span>
+            <span v-if="row.rightArmCm">右{{ row.rightArmCm }}</span>
+            <span v-if="!row.leftArmCm && !row.rightArmCm">--</span>
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="120" fixed="right">
+        <el-table-column label="大腿围 (cm)" width="130">
           <template #default="{ row }">
-            <el-button
-              v-if="!row.isAbnormal"
-              type="warning"
-              link
-              size="small"
-              @click="handleMarkAbnormal(row)"
-            >
-              标记异常
-            </el-button>
+            <span v-if="row.leftThighCm">左{{ row.leftThighCm }}</span>
+            <span v-if="row.leftThighCm && row.rightThighCm"> / </span>
+            <span v-if="row.rightThighCm">右{{ row.rightThighCm }}</span>
+            <span v-if="!row.leftThighCm && !row.rightThighCm">--</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="操作" width="80" fixed="right">
+          <template #default="{ row }">
             <el-button
               type="danger"
               link
@@ -118,21 +115,6 @@ function handleReset() {
   dateRange.value = null
   resetPage()
   loadData()
-}
-
-async function handleMarkAbnormal(row: Record<string, unknown>) {
-  try {
-    await ElMessageBox.confirm('确定要将该条体测记录标记为异常吗？', '提示', {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-      type: 'warning',
-    })
-    await bodyMetricApi.markAbnormal(row.id as number)
-    ElMessage.success('标记成功')
-    loadData(buildParams())
-  } catch {
-    // cancelled or error
-  }
 }
 
 async function handleDelete(row: Record<string, unknown>) {

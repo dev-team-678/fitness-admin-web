@@ -4,7 +4,7 @@
       <img src="@/assets/vue.svg" alt="Logo" class="logo-img" />
       <span v-show="!appStore.sidebarCollapsed" class="logo-text">健身助手管理后台</span>
     </div>
-    <el-scrollbar>
+    <el-scrollbar class="menu-scrollbar">
       <el-menu
         :default-active="activeMenu"
         :collapse="appStore.sidebarCollapsed"
@@ -73,6 +73,13 @@
         </template>
       </el-menu>
     </el-scrollbar>
+    <div class="collapse-btn" @click="appStore.toggleSidebar">
+      <el-icon>
+        <Fold v-if="!appStore.sidebarCollapsed" />
+        <Expand v-else />
+      </el-icon>
+      <span v-show="!appStore.sidebarCollapsed" class="collapse-text">收起菜单</span>
+    </div>
   </div>
 </template>
 
@@ -80,6 +87,7 @@
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import type { RouteRecordRaw } from 'vue-router'
+import { Fold, Expand } from '@element-plus/icons-vue'
 import { useAppStore } from '@/stores/app'
 import { usePermissionStore } from '@/stores/permission'
 
@@ -141,6 +149,33 @@ function getFullPath(...parts: string[]): string {
     font-weight: 600;
     white-space: nowrap;
     overflow: hidden;
+  }
+}
+
+.menu-scrollbar {
+  flex: 1;
+  overflow: hidden;
+}
+
+.collapse-btn {
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: #ffffffb3;
+  cursor: pointer;
+  border-top: 1px solid #ffffff1a;
+  transition: all 0.3s;
+
+  &:hover {
+    color: #fff;
+    background-color: #ffffff0d;
+  }
+
+  .collapse-text {
+    font-size: 14px;
+    white-space: nowrap;
   }
 }
 

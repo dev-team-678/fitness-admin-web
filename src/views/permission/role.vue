@@ -11,8 +11,8 @@
       <el-table v-loading="loading" :data="tableData" border stripe>
         <el-table-column prop="id" label="ID" width="80" />
         <el-table-column prop="name" label="角色名称" min-width="150" />
+        <el-table-column prop="code" label="角色编码" width="140" />
         <el-table-column prop="description" label="描述" min-width="250" show-overflow-tooltip />
-        <el-table-column prop="memberCount" label="成员数量" width="100" />
         <el-table-column label="操作" width="180" fixed="right">
           <template #default="{ row }">
             <el-button type="primary" link @click="handleEdit(row)">编辑</el-button>
@@ -35,6 +35,9 @@
       <el-form ref="formRef" :model="editForm" :rules="rules" label-width="100px">
         <el-form-item label="角色名称" prop="name">
           <el-input v-model="editForm.name" placeholder="请输入角色名称" />
+        </el-form-item>
+        <el-form-item label="角色编码" prop="code">
+          <el-input v-model="editForm.code" placeholder="如: super_admin" />
         </el-form-item>
         <el-form-item label="描述">
           <el-input v-model="editForm.description" type="textarea" :rows="2" placeholder="请输入角色描述" />
@@ -68,8 +71,8 @@ import { roleApi } from '@/api/system/role'
 interface RoleItem {
   id: number
   name: string
+  code: string
   description: string
-  memberCount: number
   permissions: string[]
 }
 
@@ -90,12 +93,14 @@ const editId = ref(0)
 
 const editForm = reactive({
   name: '',
+  code: '',
   description: '',
   permissions: [] as string[],
 })
 
 const rules = {
   name: [{ required: true, message: '请输入角色名称', trigger: 'blur' }],
+  code: [{ required: true, message: '请输入角色编码', trigger: 'blur' }],
 }
 
 const modules = [
@@ -145,6 +150,7 @@ function handleCreate() {
   isEdit.value = false
   editId.value = 0
   editForm.name = ''
+  editForm.code = ''
   editForm.description = ''
   editForm.permissions = []
   dialogVisible.value = true
@@ -154,6 +160,7 @@ function handleEdit(row: RoleItem) {
   isEdit.value = true
   editId.value = row.id
   editForm.name = row.name
+  editForm.code = row.code || ''
   editForm.description = row.description || ''
   editForm.permissions = row.permissions || []
   dialogVisible.value = true
@@ -181,6 +188,7 @@ async function handleSubmit() {
   try {
     const payload = {
       name: editForm.name,
+      code: editForm.code,
       description: editForm.description,
       permissions: allPermissions,
     }

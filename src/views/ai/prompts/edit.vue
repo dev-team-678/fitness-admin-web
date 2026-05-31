@@ -20,7 +20,7 @@
         </el-form-item>
 
         <el-form-item v-if="isEdit" label="当前版本">
-          <el-tag>v{{ form.currentVersion }}</el-tag>
+          <el-tag>v{{ form.version }}</el-tag>
         </el-form-item>
 
         <el-form-item label="模板内容" prop="content">
@@ -43,7 +43,7 @@
         </el-form-item>
 
         <el-form-item label="状态">
-          <el-switch v-model="form.enabled" active-text="启用" inactive-text="禁用" />
+          <el-switch v-model="form.isActive" :active-value="1" :inactive-value="0" active-text="启用" inactive-text="禁用" />
         </el-form-item>
 
         <el-form-item>
@@ -67,20 +67,20 @@
           v-for="v in versions"
           :key="v.version"
           :timestamp="v.createdAt"
-          :type="v.version === form.currentVersion ? 'primary' : ''"
+          :type="v.version === form.version ? 'primary' : ''"
           placement="top"
         >
           <div class="version-item">
             <div class="version-info">
-              <el-tag :type="v.version === form.currentVersion ? 'primary' : 'info'" size="small">
+              <el-tag :type="v.version === form.version ? 'primary' : 'info'" size="small">
                 v{{ v.version }}
-                <span v-if="v.version === form.currentVersion"> (当前)</span>
+                <span v-if="v.version === form.version"> (当前)</span>
               </el-tag>
               <span class="version-author">{{ v.createdBy }}</span>
             </div>
             <div class="version-preview">{{ v.contentPreview }}</div>
             <el-button
-              v-if="v.version !== form.currentVersion"
+              v-if="v.version !== form.version"
               link
               type="primary"
               size="small"
@@ -117,13 +117,14 @@ const formRef = ref<FormInstance>()
 const submitting = ref(false)
 const rollbackLoading = ref(false)
 
-const isEdit = computed(() => !!route.params.id)
+const isEdit = computed(() => !!route.params.id && route.params.id !== '0')
 
 const form = reactive({
   name: '',
   content: '',
-  currentVersion: 0,
-  enabled: true,
+  templateKey: '',
+  version: 0,
+  isActive: 1 as number,
 })
 
 const rules = {
@@ -148,13 +149,14 @@ const versions = ref<Version[]>([])
 async function loadDetail() {
   if (!route.params.id) return
   const res = (await promptApi.detail(Number(route.params.id))) as unknown as {
-    data: { name: string; content: string; currentVersion: number; enabled: boolean }
+    data: { name: string; content: string; templateKey: string; version: number; isActive: number }
   }
   const d = res.data
   form.name = d.name
   form.content = d.content
-  form.currentVersion = d.currentVersion
-  form.enabled = d.enabled
+  form.templateKey = d.templateKey || ''
+  form.version = d.version
+  form.isActive = d.isActive
 }
 
 async function loadVersions() {
@@ -177,7 +179,7 @@ async function handleSubmit() {
     } else {
       await promptApi.create({ ...form })
       ElMessage.success('创建成功')
-      router.push('/ai/prompts')
+      router.push('/ai/safety/prompts')
     }
   } catch {
     ElMessage.error('保存失败')
@@ -213,7 +215,7 @@ function formatVar(name: string): string {
 }
 
 function goBack() {
-  router.push('/ai/prompts')
+  router.push('/ai/safety/prompts')
 }
 
 onMounted(async () => {

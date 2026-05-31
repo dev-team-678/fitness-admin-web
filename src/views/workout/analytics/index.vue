@@ -29,19 +29,19 @@
       </el-col>
       <el-col :span="6">
         <el-card shadow="hover" class="metric-card">
-          <div class="metric-value">{{ overviewData.completionRate != null ? (overviewData.completionRate * 100).toFixed(1) + '%' : '--' }}</div>
+          <div class="metric-value">{{ overviewData.completionRate != null ? overviewData.completionRate.toFixed(1) + '%' : '--' }}</div>
           <div class="metric-label">完成率</div>
         </el-card>
       </el-col>
       <el-col :span="6">
         <el-card shadow="hover" class="metric-card">
-          <div class="metric-value">{{ overviewData.avgDuration != null ? overviewData.avgDuration + ' min' : '--' }}</div>
+          <div class="metric-value">{{ overviewData.avgDurationMin != null ? overviewData.avgDurationMin + ' min' : '--' }}</div>
           <div class="metric-label">平均时长</div>
         </el-card>
       </el-col>
       <el-col :span="6">
         <el-card shadow="hover" class="metric-card">
-          <div class="metric-value">{{ overviewData.totalVolume?.toLocaleString() ?? '--' }} kg</div>
+          <div class="metric-value">{{ overviewData.totalVolumeKg?.toLocaleString() ?? '--' }} kg</div>
           <div class="metric-label">总训练量</div>
         </el-card>
       </el-col>

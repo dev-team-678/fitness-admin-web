@@ -9,8 +9,8 @@
       </template>
 
       <el-table v-loading="loading" :data="tableData" border stripe>
-        <el-table-column prop="key" label="配置键" min-width="180" show-overflow-tooltip />
-        <el-table-column prop="value" label="配置值" min-width="200" show-overflow-tooltip>
+        <el-table-column prop="configKey" label="配置键" min-width="180" show-overflow-tooltip />
+        <el-table-column prop="configValue" label="配置值" min-width="200" show-overflow-tooltip>
           <template #default="{ row }">
             <span>{{ maskValue(row) }}</span>
           </template>
@@ -28,10 +28,10 @@
     <el-dialog v-model="dialogVisible" title="编辑配置" width="500px" destroy-on-close>
       <el-form ref="formRef" :model="editForm" :rules="rules" label-width="100px">
         <el-form-item label="配置键">
-          <el-input :model-value="editForm.key" disabled />
+          <el-input :model-value="editForm.configKey" disabled />
         </el-form-item>
-        <el-form-item label="配置值" prop="value">
-          <el-input v-model="editForm.value" type="textarea" :rows="3" placeholder="请输入配置值" />
+        <el-form-item label="配置值" prop="configValue">
+          <el-input v-model="editForm.configValue" type="textarea" :rows="3" placeholder="请输入配置值" />
         </el-form-item>
         <el-form-item label="描述">
           <el-input :model-value="editForm.description" disabled type="textarea" :rows="2" />
@@ -51,47 +51,56 @@ import { ElMessage } from 'element-plus'
 import { Refresh } from '@element-plus/icons-vue'
 import type { FormInstance } from 'element-plus'
 import { systemConfigApi } from '@/api/system/config'
-import { usePagination } from '@/composables/usePagination'
 
 interface ConfigItem {
-  key: string
-  value: string
+  id: number
+  configKey: string
+  configValue: string
   description: string
   updatedAt: string
 }
 
-const { loading, tableData, loadData: fetchList } = usePagination(systemConfigApi.list)
+const loading = ref(false)
+const tableData = ref<ConfigItem[]>([])
 
 const dialogVisible = ref(false)
 const submitting = ref(false)
 const formRef = ref<FormInstance>()
 
 const editForm = reactive({
-  key: '',
-  value: '',
+  configKey: '',
+  configValue: '',
   description: '',
 })
 
 const rules = {
-  value: [{ required: true, message: '请输入配置值', trigger: 'blur' }],
+  configValue: [{ required: true, message: '请输入配置值', trigger: 'blur' }],
 }
 
 function maskValue(row: ConfigItem): string {
   const sensitiveKeys = ['password', 'secret', 'token', 'apikey', 'api_key', 'access_key']
-  const isSensitive = sensitiveKeys.some((k) => row.key.toLowerCase().includes(k))
-  if (isSensitive && row.value && row.value.length > 4) {
-    return '****' + row.value.slice(-4)
+  const isSensitive = sensitiveKeys.some((k) => row.configKey.toLowerCase().includes(k))
+  if (isSensitive && row.configValue && row.configValue.length > 4) {
+    return '****' + row.configValue.slice(-4)
   }
-  return row.value
+  return row.configValue
 }
 
-function loadData() {
-  fetchList()
+async function loadData() {
+  loading.value = true
+  try {
+    const res = await systemConfigApi.list() as { data: ConfigItem[] }
+    tableData.value = res.data || []
+  } catch {
+    // handled by interceptor
+  } finally {
+    loading.value = false
+  }
 }
 
 function handleEdit(row: ConfigItem) {
-  editForm.key = row.key
-  editForm.value = row.value
+  editForm.configKey = row.configKey
+  editForm.configValue = row.configValue
   editForm.description = row.description
   dialogVisible.value = true
 }
@@ -102,7 +111,7 @@ async function handleSubmit() {
 
   submitting.value = true
   try {
-    await systemConfigApi.update(editForm.key, { value: editForm.value })
+    await systemConfigApi.update(editForm.configKey, { configValue: editForm.configValue, description: editForm.description })
     ElMessage.success('更新成功')
     dialogVisible.value = false
     loadData()

@@ -8,22 +8,18 @@
         </div>
       </template>
       <el-descriptions :column="4" border>
-        <el-descriptions-item label="会话ID">{{ session.sessionId }}</el-descriptions-item>
-        <el-descriptions-item label="用户">{{ session.userName }}</el-descriptions-item>
+        <el-descriptions-item label="会话ID">{{ session.id }}</el-descriptions-item>
+        <el-descriptions-item label="用户ID">{{ session.userId }}</el-descriptions-item>
+        <el-descriptions-item label="会话标题">{{ session.title }}</el-descriptions-item>
         <el-descriptions-item label="消息数">{{ session.messageCount }}</el-descriptions-item>
-        <el-descriptions-item label="反馈">
-          <span class="feedback-info">
-            <el-icon color="#67C23A"><Top /></el-icon> {{ session.thumbsUp }}
-            <el-icon color="#F56C6C" style="margin-left: 12px"><Bottom /></el-icon> {{ session.thumbsDown }}
-          </span>
-        </el-descriptions-item>
         <el-descriptions-item label="状态">
-          <el-tag :type="session.status === 'active' ? 'success' : 'info'" size="small">
-            {{ session.status === 'active' ? '进行中' : '已结束' }}
+          <el-tag :type="session.status === 1 ? 'success' : 'info'" size="small">
+            {{ session.status === 1 ? '进行中' : '已结束' }}
           </el-tag>
         </el-descriptions-item>
-        <el-descriptions-item label="开始时间">{{ session.startTime }}</el-descriptions-item>
-        <el-descriptions-item label="最后消息">{{ session.lastMessageTime }}</el-descriptions-item>
+        <el-descriptions-item label="会话类型">{{ session.sessionType }}</el-descriptions-item>
+        <el-descriptions-item label="创建时间">{{ session.createdAt }}</el-descriptions-item>
+        <el-descriptions-item label="最后更新">{{ session.updatedAt }}</el-descriptions-item>
       </el-descriptions>
     </el-card>
 
@@ -111,7 +107,6 @@
 import { ref, reactive, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { Top, Bottom } from '@element-plus/icons-vue'
 import { chatMonitorApi } from '@/api/ai/chat-monitor'
 
 interface RagReference {
@@ -134,14 +129,14 @@ const router = useRouter()
 const sessionId = Number(route.params.id)
 
 const session = reactive({
-  sessionId: '',
-  userName: '',
+  id: 0,
+  userId: 0,
+  title: '',
+  sessionType: '',
   messageCount: 0,
-  thumbsUp: 0,
-  thumbsDown: 0,
-  status: '',
-  startTime: '',
-  lastMessageTime: '',
+  status: 0,
+  createdAt: '',
+  updatedAt: '',
 })
 
 const messages = ref<Message[]>([])
@@ -252,12 +247,6 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-}
-
-.feedback-info {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
 }
 
 .message-list {

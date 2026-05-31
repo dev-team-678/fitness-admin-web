@@ -22,14 +22,14 @@
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="英文名" prop="name_en">
-              <el-input v-model="form.name_en" placeholder="英文名称" maxlength="100" />
+            <el-form-item label="英文名" prop="nameEn">
+              <el-input v-model="form.nameEn" placeholder="英文名称" maxlength="100" />
             </el-form-item>
           </el-col>
         </el-row>
 
-        <el-form-item label="所属分类" prop="category_id">
-          <el-select v-model="form.category_id" placeholder="请选择分类" style="width: 240px">
+        <el-form-item label="所属分类" prop="categoryId">
+          <el-select v-model="form.categoryId" placeholder="请选择分类" style="width: 240px">
             <el-option
               v-for="cat in categoryOptions"
               :key="cat.id"
@@ -47,8 +47,8 @@
           </el-radio-group>
         </el-form-item>
 
-        <el-form-item label="动作类型" prop="type">
-          <el-radio-group v-model="form.type">
+        <el-form-item label="动作类型" prop="exerciseType">
+          <el-radio-group v-model="form.exerciseType">
             <el-radio-button value="strength">力量</el-radio-button>
             <el-radio-button value="cardio">有氧</el-radio-button>
             <el-radio-button value="flexibility">柔韧</el-radio-button>
@@ -72,7 +72,7 @@
             <div class="muscle-row">
               <span class="muscle-label">主要肌群：</span>
               <el-select
-                v-model="form.primary_muscles"
+                v-model="form.primaryMuscles"
                 multiple
                 filterable
                 placeholder="选择主要肌群"
@@ -82,14 +82,14 @@
                   v-for="bp in bodyPartOptions"
                   :key="bp.id"
                   :label="bp.name"
-                  :value="bp.name"
+                  :value="bp.id"
                 />
               </el-select>
             </div>
             <div class="muscle-row">
               <span class="muscle-label">辅助肌群：</span>
               <el-select
-                v-model="form.secondary_muscles"
+                v-model="form.secondaryMuscles"
                 multiple
                 filterable
                 placeholder="选择辅助肌群"
@@ -99,7 +99,7 @@
                   v-for="bp in bodyPartOptions"
                   :key="bp.id"
                   :label="bp.name"
-                  :value="bp.name"
+                  :value="bp.id"
                 />
               </el-select>
             </div>
@@ -107,7 +107,7 @@
         </el-form-item>
 
         <el-form-item label="复合动作">
-          <el-switch v-model="form.is_compound" />
+          <el-switch v-model="form.isCompound" />
         </el-form-item>
 
         <el-form-item label="动作描述" prop="description">
@@ -124,22 +124,22 @@
         <!-- Steps -->
         <el-form-item label="动作步骤">
           <div class="dynamic-list">
-            <div v-for="(step, index) in form.steps" :key="index" class="dynamic-item">
+            <div v-for="(step, index) in form.instructions" :key="index" class="dynamic-item">
               <span class="step-number">{{ index + 1 }}.</span>
               <el-input
-                v-model="form.steps[index]"
+                v-model="form.instructions[index]"
                 placeholder="描述步骤"
                 style="flex: 1"
               />
               <el-button
                 link
                 type="danger"
-                @click="form.steps.splice(index, 1)"
+                @click="form.instructions.splice(index, 1)"
               >
                 删除
               </el-button>
             </div>
-            <el-button type="primary" link @click="form.steps.push('')">
+            <el-button type="primary" link @click="form.instructions.push('')">
               <el-icon><Plus /></el-icon>
               添加步骤
             </el-button>
@@ -149,21 +149,21 @@
         <!-- Precautions -->
         <el-form-item label="注意事项">
           <div class="dynamic-list">
-            <div v-for="(item, index) in form.precautions" :key="index" class="dynamic-item">
+            <div v-for="(item, index) in form.tips" :key="index" class="dynamic-item">
               <el-input
-                v-model="form.precautions[index]"
+                v-model="form.tips[index]"
                 placeholder="描述注意事项"
                 style="flex: 1"
               />
               <el-button
                 link
                 type="danger"
-                @click="form.precautions.splice(index, 1)"
+                @click="form.tips.splice(index, 1)"
               >
                 删除
               </el-button>
             </div>
-            <el-button type="primary" link @click="form.precautions.push('')">
+            <el-button type="primary" link @click="form.tips.push('')">
               <el-icon><Plus /></el-icon>
               添加注意事项
             </el-button>
@@ -178,7 +178,7 @@
             :http-request="(opt) => handleMediaUpload(opt, 'image')"
             accept="image/*"
           >
-            <img v-if="form.demo_image_url" :src="form.demo_image_url" class="media-preview" />
+            <img v-if="form.demoImageUrl" :src="form.demoImageUrl" class="media-preview" />
             <el-icon v-else class="media-placeholder"><Plus /></el-icon>
           </el-upload>
         </el-form-item>
@@ -191,8 +191,8 @@
             accept="video/*"
           >
             <video
-              v-if="form.demo_video_url"
-              :src="form.demo_video_url"
+              v-if="form.demoVideoUrl"
+              :src="form.demoVideoUrl"
               class="media-preview"
               controls
             />
@@ -204,7 +204,7 @@
           <el-col :span="12">
             <el-form-item label="每次卡路里">
               <el-input-number
-                v-model="form.calories_per_rep"
+                v-model="form.caloriesPerRep"
                 :min="0"
                 :max="1000"
                 :precision="1"
@@ -216,7 +216,7 @@
           <el-col :span="12">
             <el-form-item label="每分钟卡路里">
               <el-input-number
-                v-model="form.calories_per_minute"
+                v-model="form.caloriesPerMin"
                 :min="0"
                 :max="100"
                 :precision="1"
@@ -260,28 +260,28 @@ const saving = ref(false)
 
 const form = reactive({
   name: '',
-  name_en: '',
-  category_id: null as number | null,
+  nameEn: '',
+  categoryId: null as number | null,
   difficulty: 1,
-  type: 'strength',
+  exerciseType: 'strength',
   equipment: 'none',
-  primary_muscles: [] as string[],
-  secondary_muscles: [] as string[],
-  is_compound: false,
+  primaryMuscles: [] as string[],
+  secondaryMuscles: [] as string[],
+  isCompound: false,
   description: '',
-  steps: [''] as string[],
-  precautions: [''] as string[],
-  demo_image_url: '',
-  demo_video_url: '',
-  calories_per_rep: 0,
-  calories_per_minute: 0,
+  instructions: [''] as string[],
+  tips: [''] as string[],
+  demoImageUrl: '',
+  demoVideoUrl: '',
+  caloriesPerRep: 0,
+  caloriesPerMin: 0,
 })
 
 const rules = {
   name: [{ required: true, message: '请输入动作名称', trigger: 'blur' }],
-  category_id: [{ required: true, message: '请选择分类', trigger: 'change' }],
+  categoryId: [{ required: true, message: '请选择分类', trigger: 'change' }],
   difficulty: [{ required: true, message: '请选择难度', trigger: 'change' }],
-  type: [{ required: true, message: '请选择类型', trigger: 'change' }],
+  exerciseType: [{ required: true, message: '请选择类型', trigger: 'change' }],
   equipment: [{ required: true, message: '请选择器械', trigger: 'change' }],
 }
 
@@ -293,9 +293,9 @@ async function handleMediaUpload(options: UploadRequestOptions, type: 'image' | 
   try {
     const url = await upload(options.file, dir)
     if (type === 'image') {
-      form.demo_image_url = url
+      form.demoImageUrl = url
     } else {
-      form.demo_video_url = url
+      form.demoVideoUrl = url
     }
     ElMessage.success('上传成功')
   } catch {
@@ -307,12 +307,13 @@ async function handleSave() {
   const valid = await formRef.value?.validate().catch(() => false)
   if (!valid) return
 
-  // Filter empty steps and precautions
+  // Filter empty steps and tips, convert to JSON string
   const payload = {
     ...form,
-    steps: form.steps.filter((s) => s.trim()),
-    precautions: form.precautions.filter((p) => p.trim()),
-    target_muscles: [...form.primary_muscles, ...form.secondary_muscles],
+    instructions: JSON.stringify(form.instructions.filter((s) => s.trim())),
+    tips: JSON.stringify(form.tips.filter((p) => p.trim())),
+    bodyPartIds: [...form.primaryMuscles, ...form.secondaryMuscles],
+    isCompound: form.isCompound ? 1 : 0,
   }
 
   saving.value = true
@@ -324,7 +325,7 @@ async function handleSave() {
       await exerciseApi.create(payload)
       ElMessage.success('创建成功')
     }
-    router.push('/exercise/list')
+    router.push('/content/exercise/list')
   } catch {
     // handled by interceptor
   } finally {
@@ -333,7 +334,7 @@ async function handleSave() {
 }
 
 function goBack() {
-  router.push('/exercise/list')
+  router.push('/content/exercise/list')
 }
 
 async function loadOptions() {
@@ -354,23 +355,41 @@ async function loadDetail() {
   try {
     const res = await exerciseApi.detail(Number(route.params.id)) as any
     const data = res.data
+
+    // Parse JSON strings to arrays
+    let instructions = ['']
+    let tips = ['']
+    try {
+      if (data.instructions) {
+        instructions = typeof data.instructions === 'string' ? JSON.parse(data.instructions) : data.instructions
+      }
+    } catch { /* ignore */ }
+    try {
+      if (data.tips) {
+        tips = typeof data.tips === 'string' ? JSON.parse(data.tips) : data.tips
+      }
+    } catch { /* ignore */ }
+
+    // Extract body part IDs
+    const bodyPartIds = (data.bodyParts || []).map((bp: any) => bp.id)
+
     Object.assign(form, {
       name: data.name || '',
-      name_en: data.name_en || '',
-      category_id: data.category_id,
-      difficulty: data.difficulty || 1,
-      type: data.type || 'strength',
+      nameEn: data.nameEn || '',
+      categoryId: data.categoryId,
+      difficulty: data.difficulty || 'beginner',
+      exerciseType: data.exerciseType || 'strength',
       equipment: data.equipment || 'none',
-      primary_muscles: data.primary_muscles || [],
-      secondary_muscles: data.secondary_muscles || [],
-      is_compound: data.is_compound || false,
+      primaryMuscles: bodyPartIds,
+      secondaryMuscles: [],
+      isCompound: data.isCompound || false,
       description: data.description || '',
-      steps: data.steps?.length ? data.steps : [''],
-      precautions: data.precautions?.length ? data.precautions : [''],
-      demo_image_url: data.demo_image_url || '',
-      demo_video_url: data.demo_video_url || '',
-      calories_per_rep: data.calories_per_rep || 0,
-      calories_per_minute: data.calories_per_minute || 0,
+      instructions: instructions.length ? instructions : [''],
+      tips: tips.length ? tips : [''],
+      demoImageUrl: data.demoImageUrl || '',
+      demoVideoUrl: data.demoVideoUrl || '',
+      caloriesPerRep: data.caloriesPerRep || 0,
+      caloriesPerMin: data.caloriesPerMin || 0,
     })
   } catch {
     // handled by interceptor

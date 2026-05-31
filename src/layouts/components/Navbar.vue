@@ -1,10 +1,6 @@
 <template>
   <div class="navbar">
     <div class="left">
-      <el-icon class="collapse-btn" @click="appStore.toggleSidebar">
-        <Fold v-if="!appStore.sidebarCollapsed" />
-        <Expand v-else />
-      </el-icon>
       <el-breadcrumb separator="/">
         <el-breadcrumb-item
           v-for="item in breadcrumbs"
@@ -18,8 +14,10 @@
     <div class="right">
       <el-dropdown trigger="click" @command="handleCommand">
         <div class="user-info">
-          <el-avatar :size="28" icon="UserFilled" />
-          <span class="username">{{ userStore.userInfo?.username || '管理员' }}</span>
+          <el-avatar :size="28" :src="userStore.userInfo?.avatar">
+            {{ (userStore.userInfo?.nickname || userStore.userInfo?.username || '管').charAt(0) }}
+          </el-avatar>
+          <span class="username">{{ userStore.userInfo?.nickname || userStore.userInfo?.username || '管理员' }}</span>
           <el-icon><ArrowDown /></el-icon>
         </div>
         <template #dropdown>
@@ -57,13 +55,11 @@ import { computed, ref, reactive } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
-import { useAppStore } from '@/stores/app'
 import { useUserStore } from '@/stores/user'
 import { authApi } from '@/api/auth'
 
 const route = useRoute()
 const router = useRouter()
-const appStore = useAppStore()
 const userStore = useUserStore()
 
 const breadcrumbs = computed(() => {
@@ -154,17 +150,6 @@ function handleCommand(cmd: string) {
 .left {
   display: flex;
   align-items: center;
-  gap: 12px;
-}
-
-.collapse-btn {
-  font-size: 20px;
-  cursor: pointer;
-  color: $text-regular;
-
-  &:hover {
-    color: $primary-color;
-  }
 }
 
 .right {

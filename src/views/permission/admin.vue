@@ -10,6 +10,13 @@
 
       <el-table v-loading="loading" :data="tableData" border stripe>
         <el-table-column prop="id" label="ID" width="80" />
+        <el-table-column label="头像" width="80" align="center">
+          <template #default="{ row }">
+            <el-avatar :size="40" :src="row.avatar">
+              {{ (row.nickname || row.username)?.charAt(0) }}
+            </el-avatar>
+          </template>
+        </el-table-column>
         <el-table-column prop="username" label="用户名" min-width="120" />
         <el-table-column prop="nickname" label="昵称" min-width="120">
           <template #default="{ row }">
@@ -29,8 +36,8 @@
         </el-table-column>
         <el-table-column prop="status" label="状态" width="80" align="center">
           <template #default="{ row }">
-            <el-tag :type="row.status === 1 ? 'success' : 'danger'">
-              {{ row.status === 1 ? '启用' : '禁用' }}
+            <el-tag :type="row.status === 1 || row.status === true ? 'success' : 'danger'">
+              {{ row.status === 1 || row.status === true ? '启用' : '禁用' }}
             </el-tag>
           </template>
         </el-table-column>
@@ -40,11 +47,11 @@
           <template #default="{ row }">
             <el-button type="primary" link @click="handleEdit(row)">编辑</el-button>
             <el-button
-              :type="row.status === 1 ? 'warning' : 'success'"
+              :type="row.status === 1 || row.status === true ? 'warning' : 'success'"
               link
               @click="handleToggleStatus(row)"
             >
-              {{ row.status === 1 ? '禁用' : '启用' }}
+              {{ row.status === 1 || row.status === true ? '禁用' : '启用' }}
             </el-button>
             <el-popconfirm title="确定重置该用户密码？" @confirm="handleResetPassword(row.id)">
               <template #reference>
@@ -92,6 +99,23 @@
         </el-form-item>
         <el-form-item label="昵称">
           <el-input v-model="editForm.nickname" placeholder="请输入昵称" />
+        </el-form-item>
+        <el-form-item label="头像">
+          <div class="avatar-upload">
+            <el-avatar :size="80" :src="editForm.avatar">
+              {{ (editForm.nickname || editForm.username || '?').charAt(0) }}
+            </el-avatar>
+            <el-upload
+              :show-file-list="false"
+              :before-upload="beforeAvatarUpload"
+              :http-request="(options: any) => handleAvatarUpload(options.file)"
+              accept="image/*"
+            >
+              <el-button :loading="uploading" size="small" style="margin-top: 8px">
+                {{ uploading ? '上传中...' : '更换头像' }}
+              </el-button>
+            </el-upload>
+          </div>
         </el-form-item>
         <el-form-item label="角色" prop="roleId">
           <el-select v-model="editForm.roleId" placeholder="请选择角色" style="width: 100%">
@@ -145,11 +169,13 @@ import { adminApi } from '@/api/system/admin'
 import { roleApi } from '@/api/system/role'
 import { userApi } from '@/api/user/user'
 import { usePagination } from '@/composables/usePagination'
+import { useCosUpload } from '@/composables/useCosUpload'
 
 interface AdminItem {
   id: number
   username: string
   nickname: string
+  avatar: string
   userId: number | null
   roleName: string
   roleId: number
@@ -179,12 +205,14 @@ const submitting = ref(false)
 const formRef = ref<FormInstance>()
 const editId = ref(0)
 const roleOptions = ref<RoleOption[]>([])
+const { upload, uploading } = useCosUpload()
 
 const editForm = reactive({
   username: '',
   password: '',
   roleId: undefined as number | undefined,
   nickname: '',
+  avatar: '',
   userId: undefined as number | undefined,
   email: '',
   phone: '',
@@ -219,6 +247,30 @@ const rules = {
   roleId: [{ required: true, message: '请选择角色', trigger: 'change' }],
 }
 
+async function handleAvatarUpload(file: File) {
+  try {
+    const url = await upload(file, 'admin-avatars')
+    editForm.avatar = url
+    ElMessage.success('头像上传成功')
+  } catch {
+    ElMessage.error('头像上传失败')
+  }
+}
+
+function beforeAvatarUpload(file: File) {
+  const isImage = file.type.startsWith('image/')
+  const isLt2M = file.size / 1024 / 1024 < 2
+  if (!isImage) {
+    ElMessage.error('只能上传图片文件')
+    return false
+  }
+  if (!isLt2M) {
+    ElMessage.error('图片大小不能超过 2MB')
+    return false
+  }
+  return true
+}
+
 async function loadRoles() {
   try {
     const res = await roleApi.list()
@@ -236,6 +288,7 @@ function handleCreate() {
   editForm.password = ''
   editForm.roleId = undefined
   editForm.nickname = ''
+  editForm.avatar = ''
   editForm.userId = undefined
   editForm.email = ''
   editForm.phone = ''
@@ -250,6 +303,7 @@ function handleEdit(row: AdminItem) {
   editForm.password = ''
   editForm.roleId = row.roleId
   editForm.nickname = row.nickname || ''
+  editForm.avatar = row.avatar || ''
   editForm.userId = row.userId || undefined
   editForm.email = row.email || ''
   editForm.phone = row.phone || ''
@@ -259,10 +313,11 @@ function handleEdit(row: AdminItem) {
 
 async function handleToggleStatus(row: AdminItem) {
   try {
-    const newStatus = row.status === 1 ? 2 : 1
+    const isEnabled = row.status === 1 || row.status === true
+    const newStatus = isEnabled ? 2 : 1
     await adminApi.updateStatus(row.id, { status: newStatus })
     ElMessage.success(newStatus === 1 ? '已启用' : '已禁用')
-    loadData()
+    await loadData()
   } catch {
     // Error handled by interceptor
   }
@@ -288,6 +343,7 @@ async function handleSubmit() {
         roleId: editForm.roleId,
         userId: editForm.userId,
         nickname: editForm.nickname,
+        avatar: editForm.avatar,
         email: editForm.email,
         phone: editForm.phone,
       })
@@ -298,6 +354,7 @@ async function handleSubmit() {
         password: editForm.password,
         roleId: editForm.roleId,
         nickname: editForm.nickname,
+        avatar: editForm.avatar,
         userId: editForm.userId,
         email: editForm.email,
         phone: editForm.phone,
@@ -338,5 +395,11 @@ onMounted(() => {
 
 .text-muted {
   color: #c0c4cc;
+}
+
+.avatar-upload {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 </style>

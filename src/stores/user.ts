@@ -8,6 +8,8 @@ export interface AdminUser {
   id: number
   userId: number
   username: string
+  nickname: string
+  avatar: string
   roleId: number | null
   roleName: string
   status: number

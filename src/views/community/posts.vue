@@ -4,9 +4,8 @@
       <el-form :inline="true" :model="filters">
         <el-form-item label="状态">
           <el-select v-model="filters.status" placeholder="全部" clearable style="width: 120px">
-            <el-option label="待审核" :value="0" />
-            <el-option label="已通过" :value="1" />
-            <el-option label="已拒绝" :value="2" />
+            <el-option label="正常" :value="1" />
+            <el-option label="已隐藏" :value="0" />
           </el-select>
         </el-form-item>
         <el-form-item label="日期范围">
@@ -29,7 +28,7 @@
     <el-card shadow="never">
       <el-table :data="tableData" v-loading="loading" stripe border>
         <el-table-column prop="content" label="内容" min-width="220" show-overflow-tooltip />
-        <el-table-column prop="userName" label="用户" width="100" />
+        <el-table-column prop="userId" label="用户 ID" width="100" />
         <el-table-column prop="images" label="图片" width="100">
           <template #default="{ row }">
             <el-image
@@ -52,14 +51,8 @@
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="pinned" label="置顶" width="70">
-          <template #default="{ row }">
-            <el-tag v-if="row.pinned" type="warning" size="small">置顶</el-tag>
-            <span v-else>--</span>
-          </template>
-        </el-table-column>
         <el-table-column prop="createdAt" label="发布时间" width="160" />
-        <el-table-column label="操作" width="220" fixed="right">
+        <el-table-column label="操作" width="160" fixed="right">
           <template #default="{ row }">
             <el-button
               v-if="row.status === 0"
@@ -68,24 +61,16 @@
               size="small"
               @click="handleApprove(row)"
             >
-              通过
+              恢复
             </el-button>
             <el-button
-              v-if="row.status === 0"
+              v-if="row.status === 1"
               type="warning"
               link
               size="small"
-              @click="handleReject(row)"
+              @click="handleHide(row)"
             >
-              拒绝
-            </el-button>
-            <el-button
-              :type="row.pinned ? 'info' : 'primary'"
-              link
-              size="small"
-              @click="handleTogglePin(row)"
-            >
-              {{ row.pinned ? '取消置顶' : '置顶' }}
+              隐藏
             </el-button>
             <el-button
               type="danger"
@@ -122,15 +107,13 @@ import { usePagination } from '@/composables/usePagination'
 import { useTableSearch } from '@/composables/useTableSearch'
 
 const statusMap: Record<number, string> = {
-  0: '待审核',
-  1: '已通过',
-  2: '已拒绝',
+  0: '已隐藏',
+  1: '正常',
 }
 
 const statusTagType: Record<number, 'primary' | 'success' | 'warning' | 'info' | 'danger'> = {
-  0: 'warning',
+  0: 'danger',
   1: 'success',
-  2: 'danger',
 }
 
 const { loading, tableData, pagination, loadData, handleCurrentChange, handleSizeChange, resetPage } =
@@ -166,35 +149,25 @@ function handleReset() {
 async function handleApprove(row: Record<string, unknown>) {
   try {
     await postApi.updateStatus(row.id as number, { status: 1 })
-    ElMessage.success('审核通过')
+    ElMessage.success('已恢复')
     loadData(buildParams())
   } catch {
     // handled by interceptor
   }
 }
 
-async function handleReject(row: Record<string, unknown>) {
+async function handleHide(row: Record<string, unknown>) {
   try {
-    await ElMessageBox.confirm('确定要拒绝该帖子吗？', '提示', {
+    await ElMessageBox.confirm('确定要隐藏该帖子吗？', '提示', {
       confirmButtonText: '确定',
       cancelButtonText: '取消',
       type: 'warning',
     })
-    await postApi.updateStatus(row.id as number, { status: 2 })
-    ElMessage.success('已拒绝')
+    await postApi.updateStatus(row.id as number, { status: 0 })
+    ElMessage.success('已隐藏')
     loadData(buildParams())
   } catch {
     // cancelled or error
-  }
-}
-
-async function handleTogglePin(row: Record<string, unknown>) {
-  try {
-    await postApi.togglePin(row.id as number, { pinned: !row.pinned })
-    ElMessage.success(row.pinned ? '已取消置顶' : '已置顶')
-    loadData(buildParams())
-  } catch {
-    // handled by interceptor
   }
 }
 
@@ -205,7 +178,7 @@ async function handleDelete(row: Record<string, unknown>) {
       cancelButtonText: '取消',
       type: 'warning',
     })
-    await postApi.updateStatus(row.id as number, { status: 3 })
+    await postApi.delete(row.id as number)
     ElMessage.success('删除成功')
     loadData(buildParams())
   } catch {
