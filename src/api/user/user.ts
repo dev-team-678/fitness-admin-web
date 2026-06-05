@@ -10,10 +10,10 @@ export const userApi = {
   update(data: Record<string, unknown>) {
     return request.put('/user', data)
   },
-  updateStatus(id: number, data: { status: string; reason?: string }) {
+  updateStatus(id: number, data: { status: number; reason?: string }) {
     return request.put(`/user/${id}/status`, data)
   },
-  batchStatus(data: { user_ids: number[]; status: string; reason?: string }) {
+  batchStatus(data: { user_ids: number[]; status: number; reason?: string }) {
     return request.put('/user/batch-status', data)
   },
   getWorkouts(id: number, params?: Record<string, unknown>) {

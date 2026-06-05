@@ -10,4 +10,7 @@ export const postApi = {
   togglePin(id: number, data: { pinned: boolean }) {
     return request.put(`/community-post/${id}/pin`, data)
   },
+  delete(id: number) {
+    return request.delete(`/community-post/${id}`)
+  },
 }

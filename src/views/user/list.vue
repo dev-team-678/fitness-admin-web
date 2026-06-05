@@ -442,7 +442,7 @@ async function handleBatchStatus(status: number) {
       { confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning' },
     )
     batchLoading.value = true
-    await userApi.batchStatus({ userIds: ids, status })
+    await userApi.batchStatus({ user_ids: ids, status })
     ElMessage.success(`已批量${actionText}`)
     selectedRows.value = []
     loadData()

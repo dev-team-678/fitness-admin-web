@@ -7,7 +7,7 @@
           <div>
             <el-button type="primary" @click="handleAdd">新增规则</el-button>
             <el-button @click="openTestDialog">测试规则</el-button>
-            <el-button circle @click="loadData">
+            <el-button circle @click="() => loadData()">
               <el-icon :class="{ 'is-loading': loading }"><Refresh /></el-icon>
             </el-button>
           </div>

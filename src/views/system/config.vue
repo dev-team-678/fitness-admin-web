@@ -111,7 +111,7 @@ async function handleSubmit() {
 
   submitting.value = true
   try {
-    await systemConfigApi.update(editForm.configKey, { configValue: editForm.configValue, description: editForm.description })
+    await systemConfigApi.update(editForm.configKey, { value: editForm.configValue })
     ElMessage.success('更新成功')
     dialogVisible.value = false
     loadData()

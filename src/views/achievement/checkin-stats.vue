@@ -16,7 +16,7 @@
       </el-col>
       <el-col :span="8">
         <el-card shadow="hover" class="summary-card">
-          <div class="summary-value">{{ statsData.dailyStats?.length ?? '--' }}</div>
+          <div class="summary-value">{{ (statsData.dailyStats as unknown[])?.length ?? '--' }}</div>
           <div class="summary-label">数据点数</div>
         </el-card>
       </el-col>

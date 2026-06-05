@@ -313,7 +313,7 @@ function handleEdit(row: AdminItem) {
 
 async function handleToggleStatus(row: AdminItem) {
   try {
-    const isEnabled = row.status === 1 || row.status === true
+    const isEnabled = row.status === 1
     const newStatus = isEnabled ? 2 : 1
     await adminApi.updateStatus(row.id, { status: newStatus })
     ElMessage.success(newStatus === 1 ? '已启用' : '已禁用')

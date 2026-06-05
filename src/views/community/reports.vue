@@ -171,7 +171,7 @@ async function handleConfirm(row: Record<string, unknown>) {
       cancelButtonText: '取消',
       type: 'warning',
     })
-    await reportApi.handle(row.id as number, { result: 'confirmed' })
+    await reportApi.handle(row.id as number, { action: 'confirmed' })
     ElMessage.success('已处理')
     loadData(buildParams())
   } catch {
@@ -181,7 +181,7 @@ async function handleConfirm(row: Record<string, unknown>) {
 
 async function handleDismiss(row: Record<string, unknown>) {
   try {
-    await reportApi.handle(row.id as number, { result: 'dismissed' })
+    await reportApi.handle(row.id as number, { action: 'dismissed' })
     ElMessage.success('已驳回')
     loadData(buildParams())
   } catch {
