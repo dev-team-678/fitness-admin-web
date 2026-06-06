@@ -34,7 +34,7 @@
           <template #header>
             <div class="chart-card__header">
               <span class="chart-card__title">用户增长趋势</span>
-              <el-radio-group v-model="userGrowthRange" size="small" @change="handleUserGrowthRangeChange">
+              <el-radio-group v-model="userGrowthRange" size="small" @change="handleRangeChange">
                 <el-radio-button value="week">近7天</el-radio-button>
                 <el-radio-button value="month">近30天</el-radio-button>
               </el-radio-group>
@@ -48,7 +48,7 @@
           <template #header>
             <div class="chart-card__header">
               <span class="chart-card__title">训练活跃趋势</span>
-              <el-radio-group v-model="trainingActivityRange" size="small" @change="handleTrainingActivityRangeChange">
+              <el-radio-group v-model="trainingActivityRange" size="small" @change="handleRangeChange">
                 <el-radio-button value="week">近7天</el-radio-button>
                 <el-radio-button value="month">近30天</el-radio-button>
               </el-radio-group>
@@ -120,97 +120,45 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted, onBeforeUnmount } from 'vue'
 import * as echarts from 'echarts'
-import { workoutAnalyticsApi } from '@/api/workout/analytics'
+import { dashboardApi, type DashboardOverview, type TrendData } from '@/api/dashboard'
 
 // ─── Metric Cards ──────────────────────────────────────────────────
 const metricCards = reactive([
   {
     title: '今日新增用户',
-    value: 128,
-    change: 12.5,
+    value: 0,
+    change: 0,
     icon: 'User',
     iconColor: '#409EFF',
   },
   {
     title: 'DAU',
-    value: 3562,
-    change: 5.2,
+    value: 0,
+    change: 0,
     icon: 'DataLine',
     iconColor: '#67C23A',
   },
   {
     title: '今日训练',
-    value: 892,
-    change: -3.1,
+    value: 0,
+    change: 0,
     icon: 'TrendCharts',
     iconColor: '#E6A23C',
   },
   {
     title: '今日打卡',
-    value: 654,
-    change: 8.7,
+    value: 0,
+    change: 0,
     icon: 'CircleCheck',
     iconColor: '#F56C6C',
   },
 ])
 
 // ─── Popular Exercises ─────────────────────────────────────────────
-const popularExercises = ref([
-  { name: '深蹲', category: '力量训练', bodyPart: '腿部', count: 2340, trend: 15 },
-  { name: '俯卧撑', category: '自重训练', bodyPart: '胸部', count: 1980, trend: 8 },
-  { name: '硬拉', category: '力量训练', bodyPart: '背部', count: 1756, trend: 12 },
-  { name: '卧推', category: '力量训练', bodyPart: '胸部', count: 1650, trend: -2 },
-  { name: '引体向上', category: '自重训练', bodyPart: '背部', count: 1420, trend: 6 },
-  { name: '平板支撑', category: '核心训练', bodyPart: '核心', count: 1380, trend: 18 },
-  { name: '弓步蹲', category: '力量训练', bodyPart: '腿部', count: 1210, trend: -5 },
-  { name: '肩推', category: '力量训练', bodyPart: '肩部', count: 1050, trend: 3 },
-  { name: '卷腹', category: '核心训练', bodyPart: '核心', count: 980, trend: 10 },
-  { name: '波比跳', category: 'HIIT', bodyPart: '全身', count: 870, trend: 22 },
-])
+const popularExercises = ref([])
 
 // ─── AI Metrics ────────────────────────────────────────────────────
-const aiMetrics = ref([
-  {
-    title: 'AI 对话总量',
-    value: '12,845',
-    sub: '较昨日 +18.3%',
-    icon: 'ChatDotRound',
-    bgColor: 'rgba(108, 92, 231, 0.1)',
-    iconColor: '#6C5CE7',
-  },
-  {
-    title: 'AI 计划生成',
-    value: '1,024',
-    sub: '较昨日 +9.6%',
-    icon: 'MagicStick',
-    bgColor: 'rgba(255, 107, 53, 0.1)',
-    iconColor: '#FF6B35',
-  },
-  {
-    title: '知识库命中率',
-    value: '87.2%',
-    sub: '较昨日 +2.1%',
-    icon: 'Connection',
-    bgColor: 'rgba(103, 194, 58, 0.1)',
-    iconColor: '#67C23A',
-  },
-  {
-    title: '平均响应时间',
-    value: '1.2s',
-    sub: '较昨日 -0.3s',
-    icon: 'Timer',
-    bgColor: 'rgba(230, 162, 60, 0.1)',
-    iconColor: '#E6A23C',
-  },
-  {
-    title: '安全拦截次数',
-    value: '23',
-    sub: '较昨日 -15',
-    icon: 'Shield',
-    bgColor: 'rgba(245, 108, 108, 0.1)',
-    iconColor: '#F56C6C',
-  },
-])
+const aiMetrics = ref([])
 
 // ─── Charts ────────────────────────────────────────────────────────
 const userGrowthChartRef = ref<HTMLDivElement>()
@@ -221,31 +169,131 @@ let trainingActivityChart: echarts.ECharts | null = null
 const userGrowthRange = ref('week')
 const trainingActivityRange = ref('week')
 
-function generateDates(days: number): string[] {
-  const dates: string[] = []
-  const now = new Date()
-  for (let i = days - 1; i >= 0; i--) {
-    const d = new Date(now)
-    d.setDate(d.getDate() - i)
-    dates.push(`${d.getMonth() + 1}/${d.getDate()}`)
+// 存储趋势数据
+let userGrowthData: TrendData[] = []
+let trainingActivityData: TrendData[] = []
+
+// 加载数据
+async function loadData(days: number = 7) {
+  try {
+    const data: DashboardOverview = await dashboardApi.overview(days)
+
+    // 更新指标卡片
+    if (data.metricCards) {
+      data.metricCards.forEach((card, index) => {
+        if (metricCards[index]) {
+          metricCards[index].value = card.value
+          metricCards[index].change = card.change
+        }
+      })
+    }
+
+    // 更新趋势数据
+    userGrowthData = data.userGrowthTrend || []
+    trainingActivityData = data.trainingActivityTrend || []
+
+    // 更新图表
+    updateUserGrowthChart(userGrowthData)
+    updateTrainingActivityChart(trainingActivityData)
+
+    // 更新热门动作
+    popularExercises.value = data.popularExercises || []
+
+    // 更新AI指标
+    if (data.aiOverview) {
+      const ai = data.aiOverview
+      aiMetrics.value = [
+        {
+          title: 'AI 对话总量',
+          value: formatNumber(ai.totalChatSessions),
+          sub: `较昨日 ${formatChange(ai.chatSessionsChange)}`,
+          icon: 'ChatDotRound',
+          bgColor: 'rgba(108, 92, 231, 0.1)',
+          iconColor: '#6C5CE7',
+        },
+        {
+          title: 'AI 计划生成',
+          value: formatNumber(ai.totalPlanGenerated),
+          sub: `较昨日 ${formatChange(ai.planGeneratedChange)}`,
+          icon: 'MagicStick',
+          bgColor: 'rgba(255, 107, 53, 0.1)',
+          iconColor: '#FF6B35',
+        },
+        {
+          title: '知识库命中率',
+          value: `${ai.ragHitRate}%`,
+          sub: `较昨日 ${ai.ragHitRateChange >= 0 ? '+' : ''}${ai.ragHitRateChange}%`,
+          icon: 'Connection',
+          bgColor: 'rgba(103, 194, 58, 0.1)',
+          iconColor: '#67C23A',
+        },
+        {
+          title: '平均响应时间',
+          value: formatTime(ai.avgResponseTime),
+          sub: `较昨日 ${formatTimeChange(ai.avgResponseTimeChange)}`,
+          icon: 'Timer',
+          bgColor: 'rgba(230, 162, 60, 0.1)',
+          iconColor: '#E6A23C',
+        },
+        {
+          title: '安全拦截次数',
+          value: formatNumber(ai.safetyBlockCount),
+          sub: `较昨日 ${formatChange(ai.safetyBlockChange)}`,
+          icon: 'Shield',
+          bgColor: 'rgba(245, 108, 108, 0.1)',
+          iconColor: '#F56C6C',
+        },
+      ]
+    }
+  } catch (error) {
+    console.error('加载数据看板失败:', error)
   }
-  return dates
 }
 
-function generateRandomData(count: number, min: number, max: number): number[] {
-  return Array.from({ length: count }, () => Math.floor(Math.random() * (max - min + 1)) + min)
+// 格式化数字
+function formatNumber(num: number): string {
+  if (num >= 10000) {
+    return (num / 10000).toFixed(1) + '万'
+  }
+  return num.toLocaleString()
+}
+
+// 格式化变化
+function formatChange(change: number): string {
+  if (change >= 0) {
+    return `+${change}%`
+  }
+  return `${change}%`
+}
+
+// 格式化时间
+function formatTime(ms: number): string {
+  if (ms >= 1000) {
+    return (ms / 1000).toFixed(1) + 's'
+  }
+  return ms + 'ms'
+}
+
+// 格式化时间变化
+function formatTimeChange(change: number): string {
+  if (change >= 0) {
+    return `+${formatTime(change)}`
+  }
+  return formatTime(change)
 }
 
 function initUserGrowthChart() {
   if (!userGrowthChartRef.value) return
   userGrowthChart = echarts.init(userGrowthChartRef.value)
-  const days = userGrowthRange.value === 'week' ? 7 : 30
-  const dates = generateDates(days)
-  updateUserGrowthChart(dates)
 }
 
-function updateUserGrowthChart(dates: string[]) {
-  if (!userGrowthChart) return
+function updateUserGrowthChart(trendData: TrendData[]) {
+  if (!userGrowthChart || !trendData.length) return
+
+  const dates = trendData.map(d => d.date)
+  const newUsers = trendData.map(d => d.series?.find(s => s.name === '新增用户')?.value || 0)
+  const activeUsers = trendData.map(d => d.series?.find(s => s.name === '活跃用户')?.value || 0)
+
   const option: echarts.EChartsOption = {
     tooltip: {
       trigger: 'axis',
@@ -283,7 +331,7 @@ function updateUserGrowthChart(dates: string[]) {
         smooth: true,
         symbol: 'circle',
         symbolSize: 6,
-        data: generateRandomData(dates.length, 80, 200),
+        data: newUsers,
         itemStyle: { color: '#FF6B35' },
         areaStyle: {
           color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
@@ -298,7 +346,7 @@ function updateUserGrowthChart(dates: string[]) {
         smooth: true,
         symbol: 'circle',
         symbolSize: 6,
-        data: generateRandomData(dates.length, 2000, 5000),
+        data: activeUsers,
         itemStyle: { color: '#6C5CE7' },
         areaStyle: {
           color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
@@ -315,13 +363,15 @@ function updateUserGrowthChart(dates: string[]) {
 function initTrainingActivityChart() {
   if (!trainingActivityChartRef.value) return
   trainingActivityChart = echarts.init(trainingActivityChartRef.value)
-  const days = trainingActivityRange.value === 'week' ? 7 : 30
-  const dates = generateDates(days)
-  updateTrainingActivityChart(dates)
 }
 
-function updateTrainingActivityChart(dates: string[]) {
-  if (!trainingActivityChart) return
+function updateTrainingActivityChart(trendData: TrendData[]) {
+  if (!trainingActivityChart || !trendData.length) return
+
+  const dates = trendData.map(d => d.date)
+  const workoutCounts = trendData.map(d => d.series?.find(s => s.name === '训练次数')?.value || 0)
+  const checkinCounts = trendData.map(d => d.series?.find(s => s.name === '打卡次数')?.value || 0)
+
   const option: echarts.EChartsOption = {
     tooltip: {
       trigger: 'axis',
@@ -357,7 +407,7 @@ function updateTrainingActivityChart(dates: string[]) {
         name: '训练次数',
         type: 'bar',
         barWidth: dates.length > 14 ? '40%' : '30%',
-        data: generateRandomData(dates.length, 500, 1200),
+        data: workoutCounts,
         itemStyle: {
           color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
             { offset: 0, color: '#FF8C5A' },
@@ -370,7 +420,7 @@ function updateTrainingActivityChart(dates: string[]) {
         name: '打卡次数',
         type: 'bar',
         barWidth: dates.length > 14 ? '40%' : '30%',
-        data: generateRandomData(dates.length, 300, 800),
+        data: checkinCounts,
         itemStyle: {
           color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
             { offset: 0, color: '#8B7EED' },
@@ -384,14 +434,9 @@ function updateTrainingActivityChart(dates: string[]) {
   trainingActivityChart.setOption(option, true)
 }
 
-function handleUserGrowthRangeChange() {
+function handleRangeChange() {
   const days = userGrowthRange.value === 'week' ? 7 : 30
-  updateUserGrowthChart(generateDates(days))
-}
-
-function handleTrainingActivityRangeChange() {
-  const days = trainingActivityRange.value === 'week' ? 7 : 30
-  updateTrainingActivityChart(generateDates(days))
+  loadData(days)
 }
 
 function handleResize() {
@@ -403,6 +448,7 @@ function handleResize() {
 onMounted(() => {
   initUserGrowthChart()
   initTrainingActivityChart()
+  loadData(7)
   window.addEventListener('resize', handleResize)
 })
 

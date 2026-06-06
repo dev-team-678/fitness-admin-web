@@ -1,8 +1,13 @@
 <template>
   <div class="sidebar" :class="{ collapsed: appStore.sidebarCollapsed }">
-    <div class="logo">
-      <img src="@/assets/vue.svg" alt="Logo" class="logo-img" />
-      <span v-show="!appStore.sidebarCollapsed" class="logo-text">健身助手管理后台</span>
+    <div class="sidebar-header">
+      <div class="logo">
+        <img src="@/assets/logo.png" alt="Logo" class="logo-img" />
+        <div v-show="!appStore.sidebarCollapsed" class="logo-content">
+          <h1 class="logo-title">健身助手管理后台</h1>
+          <p class="logo-subtitle">Fitness Admin Backend</p>
+        </div>
+      </div>
     </div>
     <el-scrollbar class="menu-scrollbar">
       <el-menu
@@ -10,9 +15,6 @@
         :collapse="appStore.sidebarCollapsed"
         :collapse-transition="false"
         :unique-opened="true"
-        background-color="#001529"
-        text-color="#ffffffb3"
-        active-text-color="#ffffff"
         router
       >
         <template v-for="route in menuRoutes" :key="route.path">
@@ -112,43 +114,85 @@ function getFullPath(...parts: string[]): string {
 <style lang="scss" scoped>
 @use '@/styles/variables' as *;
 
+// 自定义绿色渐变配色
+$green-start: #81c784;
+$green-end: #66bb6a;
+$orange-light: #ffcc80;
+$orange-accent: #ff7043;
+$bg-gradient-start: #f1f8e9;
+$bg-gradient-end: #fff8e1;
+
 .sidebar {
   position: fixed;
   left: 0;
   top: 0;
   bottom: 0;
   width: $sidebar-width;
-  background-color: #001529;
+  background: linear-gradient(180deg, $bg-gradient-start 0%, $bg-gradient-end 100%);
+  box-shadow: 2px 0 12px rgba(0, 0, 0, 0.1);
+  border-right: 1px solid #c8e6c9;
   transition: width 0.3s;
   z-index: 1001;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 
   &.collapsed {
     width: $sidebar-collapsed-width;
   }
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, $green-start, $green-end, $orange-light, $orange-accent);
+    z-index: 1;
+  }
+}
+
+.sidebar-header {
+  position: relative;
+  z-index: 2;
 }
 
 .logo {
   height: $navbar-height;
   display: flex;
   align-items: center;
-  justify-content: center;
   padding: 0 16px;
-  background-color: #002140;
+  background: linear-gradient(135deg, $green-start 0%, $green-end 100%);
+  box-shadow: 0 2px 8px rgba(102, 187, 106, 0.3);
 
   .logo-img {
-    width: 28px;
-    height: 28px;
+    width: 32px;
+    height: 32px;
   }
 
-  .logo-text {
-    margin-left: 8px;
-    color: #fff;
-    font-size: 14px;
+  .logo-content {
+    margin-left: 12px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .logo-title {
+    font-size: 16px;
     font-weight: 600;
+    color: #ffffff;
+    margin: 0;
+    line-height: 1.3;
     white-space: nowrap;
-    overflow: hidden;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  }
+
+  .logo-subtitle {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.85);
+    margin: 0;
+    line-height: 1.3;
   }
 }
 
@@ -163,14 +207,15 @@ function getFullPath(...parts: string[]): string {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  color: #ffffffb3;
+  color: #558b2f;
   cursor: pointer;
-  border-top: 1px solid #ffffff1a;
+  border-top: 1px solid #c8e6c9;
   transition: all 0.3s;
+  background: linear-gradient(135deg, rgba($green-start, 0.3) 0%, rgba($green-end, 0.2) 100%);
 
   &:hover {
-    color: #fff;
-    background-color: #ffffff0d;
+    color: #ffffff;
+    background: linear-gradient(135deg, $green-start 0%, $green-end 100%);
   }
 
   .collapse-text {
@@ -181,17 +226,97 @@ function getFullPath(...parts: string[]): string {
 
 :deep(.el-menu) {
   border-right: none;
+  background-color: transparent;
+}
+
+:deep(.el-sub-menu) {
+  margin: 4px 8px;
+  border-radius: 10px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+
+  &:hover {
+    background-color: rgba(129, 199, 132, 0.15);
+    transform: translateX(2px);
+  }
+}
+
+:deep(.el-sub-menu__title) {
+  height: 46px;
+  line-height: 46px;
+  border-radius: 10px;
+  color: #33691e;
+  font-weight: 700;
+  margin: 0;
+  padding-left: 20px !important;
+  transition: all 0.3s ease;
+
+  &:hover {
+    background-color: rgba(129, 199, 132, 0.2);
+    color: #1b5e20;
+  }
+
+  .el-icon {
+    font-size: 18px;
+    margin-right: 10px;
+    color: $green-end;
+  }
 }
 
 :deep(.el-sub-menu .el-menu) {
-  background-color: #000c17 !important;
+  background-color: rgba(255, 255, 255, 0.6) !important;
+  padding-left: 0;
+  padding-right: 8px;
+  backdrop-filter: blur(10px);
 }
 
 :deep(.el-sub-menu .el-sub-menu .el-menu) {
-  background-color: #000810 !important;
+  padding-left: 0;
+  border-left: 3px solid $orange-light;
+  margin-left: 16px;
 }
 
-:deep(.el-menu-item.is-active) {
-  background-color: $primary-color !important;
+:deep(.el-menu-item) {
+  height: 42px;
+  line-height: 42px;
+  border-radius: 8px;
+  margin: 2px 8px 2px 8px;
+  padding-left: 20px !important;
+  color: #558b2f;
+  font-size: 13px;
+  transition: all 0.3s ease;
+
+  &:hover {
+    background-color: rgba(255, 204, 128, 0.3);
+    color: #33691e;
+    transform: translateX(0);
+  }
+
+  &.is-active {
+    background: linear-gradient(135deg, $green-start 0%, $green-end 100%);
+    color: #ffffff;
+    font-weight: 600;
+    position: relative;
+    box-shadow: 0 3px 10px rgba(102, 187, 106, 0.4);
+
+    &::before {
+      content: '';
+      position: absolute;
+      left: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 6px;
+      height: 6px;
+      background: $orange-light;
+      border-radius: 50%;
+      box-shadow: 0 0 6px $orange-accent;
+    }
+  }
+}
+
+:deep(.el-sub-menu__icon-arrow) {
+  font-size: 12px;
+  color: #81c784;
+  transition: transform 0.3s;
 }
 </style>

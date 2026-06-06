@@ -1,16 +1,18 @@
 <template>
   <div class="achievement-list">
     <el-card shadow="never" class="filter-card">
-      <el-form :inline="true">
-        <el-form-item label="名称">
-          <el-input v-model="filters.name" placeholder="请输入成就名称" clearable />
-        </el-form-item>
-        <el-form-item>
-          <el-button type="primary" @click="handleSearch">查询</el-button>
-          <el-button @click="handleReset">重置</el-button>
-          <el-button type="success" @click="handleAdd">新增成就</el-button>
-        </el-form-item>
-      </el-form>
+      <div class="filter-header">
+        <el-form :inline="true">
+          <el-form-item label="名称">
+            <el-input v-model="filters.name" placeholder="请输入成就名称" clearable />
+          </el-form-item>
+          <el-form-item>
+            <el-button type="primary" @click="handleSearch">查询</el-button>
+            <el-button @click="handleReset">重置</el-button>
+          </el-form-item>
+        </el-form>
+        <el-button type="success" @click="handleAdd">新增成就</el-button>
+      </div>
     </el-card>
 
     <el-card shadow="never">
@@ -134,6 +136,12 @@ onMounted(() => {
 
 .filter-card {
   margin-bottom: 16px;
+}
+
+.filter-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .pagination {

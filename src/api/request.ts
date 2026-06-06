@@ -27,8 +27,7 @@ service.interceptors.request.use(
   (config) => {
     const token = getToken()
     if (token) {
-      // Sa-Token 不需要 Bearer 前缀
-      config.headers.Authorization = token
+      config.headers.Authorization = `Bearer ${token}`
     }
     return config
   },

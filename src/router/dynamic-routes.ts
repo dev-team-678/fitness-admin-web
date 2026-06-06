@@ -180,7 +180,7 @@ export const dynamicRoutes: RouteRecordRaw[] = [
             path: 'create',
             name: 'AchievementCreate',
             component: () => import('@/views/achievement/edit.vue'),
-            meta: { title: '新增成就', permission: 'achievement:create' },
+            meta: { title: '新增成就', hidden: true, permission: 'achievement:create' },
           },
           {
             path: 'edit/:id',

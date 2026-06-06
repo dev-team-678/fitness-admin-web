@@ -139,12 +139,13 @@ function handleCommand(cmd: string) {
 
 .navbar {
   height: $navbar-height;
-  background: $bg-white;
-  border-bottom: 1px solid $border-light;
+  background: #ffffff;
+  border-bottom: 1px solid #f0f0f0;
+  box-shadow: 0 1px 4px rgba(0, 21, 41, 0.08);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 16px;
+  padding: 0 20px;
 }
 
 .left {
@@ -160,12 +161,20 @@ function handleCommand(cmd: string) {
 .user-info {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: background-color 0.3s;
+
+  &:hover {
+    background-color: #f5f7fa;
+  }
 
   .username {
     font-size: 14px;
-    color: $text-primary;
+    color: #303133;
+    font-weight: 500;
   }
 }
 </style>
