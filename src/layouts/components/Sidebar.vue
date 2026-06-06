@@ -162,6 +162,7 @@ $bg-gradient-end: #fff8e1;
   height: $navbar-height;
   display: flex;
   align-items: center;
+  justify-content: center;
   padding: 0 16px;
   background: linear-gradient(135deg, $green-start 0%, $green-end 100%);
   box-shadow: 0 2px 8px rgba(102, 187, 106, 0.3);
@@ -169,6 +170,7 @@ $bg-gradient-end: #fff8e1;
   .logo-img {
     width: 32px;
     height: 32px;
+    flex-shrink: 0;
   }
 
   .logo-content {
@@ -176,6 +178,7 @@ $bg-gradient-end: #fff8e1;
     display: flex;
     flex-direction: column;
     justify-content: center;
+    overflow: hidden;
   }
 
   .logo-title {
@@ -212,10 +215,15 @@ $bg-gradient-end: #fff8e1;
   border-top: 1px solid #c8e6c9;
   transition: all 0.3s;
   background: linear-gradient(135deg, rgba($green-start, 0.3) 0%, rgba($green-end, 0.2) 100%);
+  flex-shrink: 0;
 
   &:hover {
     color: #ffffff;
     background: linear-gradient(135deg, $green-start 0%, $green-end 100%);
+  }
+
+  .el-icon {
+    font-size: 18px;
   }
 
   .collapse-text {
@@ -239,6 +247,17 @@ $bg-gradient-end: #fff8e1;
     background-color: rgba(129, 199, 132, 0.15);
     transform: translateX(2px);
   }
+
+  // 收起状态下的一级菜单样式
+  &.is-active > .el-sub-menu__title {
+    background: linear-gradient(135deg, $green-start 0%, $green-end 100%);
+    color: #ffffff;
+    box-shadow: 0 3px 10px rgba(102, 187, 106, 0.4);
+
+    .el-icon {
+      color: #ffffff;
+    }
+  }
 }
 
 :deep(.el-sub-menu__title) {
@@ -257,7 +276,7 @@ $bg-gradient-end: #fff8e1;
   }
 
   .el-icon {
-    font-size: 18px;
+    font-size: 22px;
     margin-right: 10px;
     color: $green-end;
   }
@@ -286,6 +305,12 @@ $bg-gradient-end: #fff8e1;
   font-size: 13px;
   transition: all 0.3s ease;
 
+  .el-icon {
+    font-size: 20px;
+    margin-right: 10px;
+    color: $green-end;
+  }
+
   &:hover {
     background-color: rgba(255, 204, 128, 0.3);
     color: #33691e;
@@ -298,6 +323,10 @@ $bg-gradient-end: #fff8e1;
     font-weight: 600;
     position: relative;
     box-shadow: 0 3px 10px rgba(102, 187, 106, 0.4);
+
+    .el-icon {
+      color: #ffffff;
+    }
 
     &::before {
       content: '';
@@ -314,9 +343,125 @@ $bg-gradient-end: #fff8e1;
   }
 }
 
+// 二级菜单项选中样式（背景更浅）
+:deep(.el-sub-menu .el-menu .el-menu-item) {
+  &.is-active {
+    background: linear-gradient(135deg, rgba($green-start, 0.6) 0%, rgba($green-end, 0.6) 100%);
+    color: #ffffff;
+    box-shadow: 0 2px 8px rgba(102, 187, 106, 0.25);
+
+    &::before {
+      background: rgba($orange-light, 0.8);
+      box-shadow: 0 0 4px rgba($orange-accent, 0.6);
+    }
+  }
+}
+
 :deep(.el-sub-menu__icon-arrow) {
   font-size: 12px;
   color: #81c784;
   transition: transform 0.3s;
+}
+
+// ==================== 收起状态样式 ====================
+.sidebar.collapsed {
+  :deep(.el-sub-menu) {
+    margin: 4px 8px;
+    border-radius: 8px;
+    overflow: visible;
+
+    &:hover {
+      transform: none;
+      background-color: rgba(129, 199, 132, 0.15);
+    }
+  }
+
+  :deep(.el-sub-menu__title) {
+    padding: 0 !important;
+    justify-content: center;
+
+    .el-icon {
+      margin: 0 !important;
+      font-size: 20px;
+      width: 24px;
+      height: 24px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: $green-end;
+    }
+  }
+
+  :deep(.el-menu-item) {
+    margin: 4px 8px;
+    padding: 0 !important;
+    justify-content: center;
+
+    .el-icon {
+      margin: 0 !important;
+      font-size: 20px;
+      width: 24px;
+      height: 24px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: $green-end;
+    }
+
+    &.is-active::before {
+      display: none;
+    }
+  }
+
+  // 收起时隐藏箭头
+  :deep(.el-sub-menu__icon-arrow) {
+    display: none !important;
+  }
+}
+
+// 收起状态下的弹出子菜单样式
+:deep(.el-menu--collapse) {
+  .el-sub-menu__title {
+    padding: 0 !important;
+  }
+}
+
+:deep(.el-menu--popup) {
+  min-width: 180px;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  background: linear-gradient(180deg, $bg-gradient-start 0%, $bg-gradient-end 100%);
+
+  .el-sub-menu {
+    margin: 2px 4px;
+    border-radius: 6px;
+
+    &:hover {
+      transform: none;
+    }
+  }
+
+  .el-sub-menu__title {
+    padding-left: 16px !important;
+  }
+
+  .el-menu-item {
+    padding-left: 16px !important;
+    margin: 2px 4px;
+    border-radius: 6px;
+
+    &:hover {
+      background-color: rgba(129, 199, 132, 0.15);
+    }
+
+    &.is-active {
+      background: linear-gradient(135deg, $green-start 0%, $green-end 100%);
+      color: #ffffff;
+    }
+
+    &.is-active::before {
+      left: 4px;
+    }
+  }
 }
 </style>

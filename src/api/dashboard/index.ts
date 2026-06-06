@@ -50,7 +50,7 @@ export interface DashboardOverview {
 
 export const dashboardApi = {
   overview(days?: number) {
-    return request.get<any, DashboardOverview>('/dashboard/overview', {
+    return request.get('/dashboard/overview', {
       params: { days }
     })
   }

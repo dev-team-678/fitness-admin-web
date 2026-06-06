@@ -176,11 +176,12 @@ let trainingActivityData: TrendData[] = []
 // 加载数据
 async function loadData(days: number = 7) {
   try {
-    const data: DashboardOverview = await dashboardApi.overview(days)
+    const res = await dashboardApi.overview(days)
+    const data = res.data || res
 
     // 更新指标卡片
     if (data.metricCards) {
-      data.metricCards.forEach((card, index) => {
+      data.metricCards.forEach((card: any, index: number) => {
         if (metricCards[index]) {
           metricCards[index].value = card.value
           metricCards[index].change = card.change
@@ -448,7 +449,10 @@ function handleResize() {
 onMounted(() => {
   initUserGrowthChart()
   initTrainingActivityChart()
-  loadData(7)
+  // 延迟加载数据，确保图表已初始化
+  setTimeout(() => {
+    loadData(7)
+  }, 100)
   window.addEventListener('resize', handleResize)
 })
 
