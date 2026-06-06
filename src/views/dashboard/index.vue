@@ -120,7 +120,7 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted, onBeforeUnmount } from 'vue'
 import * as echarts from 'echarts'
-import { dashboardApi, type DashboardOverview, type TrendData } from '@/api/dashboard'
+import { dashboardApi, type DashboardOverview, type TrendData, type PopularExercise } from '@/api/dashboard'
 
 // ─── Metric Cards ──────────────────────────────────────────────────
 const metricCards = reactive([
@@ -155,10 +155,19 @@ const metricCards = reactive([
 ])
 
 // ─── Popular Exercises ─────────────────────────────────────────────
-const popularExercises = ref([])
+const popularExercises = ref<PopularExercise[]>([])
+
+interface AiMetricItem {
+  title: string
+  value: string
+  sub: string
+  icon: string
+  bgColor: string
+  iconColor: string
+}
 
 // ─── AI Metrics ────────────────────────────────────────────────────
-const aiMetrics = ref([])
+const aiMetrics = ref<AiMetricItem[]>([])
 
 // ─── Charts ────────────────────────────────────────────────────────
 const userGrowthChartRef = ref<HTMLDivElement>()

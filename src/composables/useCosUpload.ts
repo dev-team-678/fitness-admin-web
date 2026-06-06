@@ -14,9 +14,10 @@ export function useCosUpload() {
       const res = await request.get('/upload/media', { params: { filename: file.name, dir } })
       const { uploadUrl, fileUrl } = (res as { data: { uploadUrl: string; fileUrl: string } }).data
 
-      // 2. Upload directly to COS
+      // 2. Upload directly to COS (no-referrer 避免跨域防盗链拦截)
       await axios.put(uploadUrl, file, {
         headers: { 'Content-Type': file.type },
+        referrerPolicy: 'no-referrer',
         onUploadProgress: (e) => {
           if (e.total) {
             progress.value = Math.round((e.loaded / e.total) * 100)
