@@ -4,7 +4,7 @@ import { getToken, removeToken } from '@/utils/auth'
 import router from '@/router'
 import JSONBig from 'json-bigint'
 
-const baseURL = import.meta.env.VITE_APP_BASE_API || '/api/admin/v1'
+const baseURL = import.meta.env.VITE_APP_BASE_API || '/api/v1'
 
 const jsonBig = JSONBig({ storeAsString: true })
 

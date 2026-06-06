@@ -36,8 +36,8 @@
             accept="image/*"
           >
             <el-image
-              v-if="form.icon"
-              :src="form.icon"
+              v-if="form.iconUrl"
+              :src="form.iconUrl"
               style="width: 80px; height: 80px"
               fit="contain"
             />
@@ -78,7 +78,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, computed } from 'vue'
+import { ref, reactive, onMounted, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { Plus } from '@element-plus/icons-vue'
@@ -90,7 +90,7 @@ const router = useRouter()
 const formRef = ref<FormInstance>()
 const submitting = ref(false)
 
-const isEdit = computed(() => !!route.query.id)
+const isEdit = computed(() => !!route.params.id)
 
 const conditionTypeMap: Record<string, string> = {
   workout_count: '训练次数',
@@ -136,10 +136,10 @@ async function handleIconUpload(options: UploadRequestOptions) {
   try {
     const reader = new FileReader()
     reader.onload = (e) => {
-      form.icon = e.target?.result as string
+      form.iconUrl = e.target?.result as string
     }
     reader.readAsDataURL(options.file)
-    // In production, replace with actual upload and set form.icon to the returned URL
+    // In production, replace with actual upload and set form.iconUrl to the returned URL
     ElMessage.info('图标已选择，保存时将上传')
   } catch {
     ElMessage.error('图标上传失败')
@@ -147,16 +147,17 @@ async function handleIconUpload(options: UploadRequestOptions) {
 }
 
 async function loadDetail() {
-  if (!route.query.id) return
+  if (!route.params.id) return
   try {
-    const res = await achievementApi.list({ id: route.query.id })
-    const data = (res as { data: Record<string, unknown>[] }).data
-    if (data && data.length > 0) {
-      const item = data[0]
+    const res = (await achievementApi.detail(Number(route.params.id))) as unknown as {
+      data: Record<string, unknown>
+    }
+    const item = res.data
+    if (item) {
       Object.assign(form, {
         name: item.name ?? '',
         description: item.description ?? '',
-        icon: item.icon ?? '',
+        iconUrl: item.iconUrl ?? '',
         conditionType: item.conditionType ?? '',
         conditionValue: item.conditionValue ?? 1,
         badgeColor: item.badgeColor ?? '#409EFF',
@@ -175,7 +176,7 @@ async function handleSubmit() {
   submitting.value = true
   try {
     if (isEdit.value) {
-      await achievementApi.update(Number(route.query.id), { ...form })
+      await achievementApi.update(Number(route.params.id), { ...form })
       ElMessage.success('更新成功')
     } else {
       await achievementApi.create({ ...form })
@@ -192,6 +193,11 @@ async function handleSubmit() {
 function handleCancel() {
   router.back()
 }
+
+watch(
+  () => route.params.id,
+  () => loadDetail(),
+)
 
 onMounted(() => {
   loadDetail()

@@ -91,7 +91,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { safetyApi } from '@/api/ai/safety'
@@ -154,6 +154,15 @@ async function handleSubmit() {
 function goBack() {
   router.push('/ai/safety/rules')
 }
+
+watch(
+  () => route.params.id,
+  () => {
+    if (isEdit.value) {
+      loadDetail()
+    }
+  },
+)
 
 onMounted(() => {
   if (isEdit.value) {

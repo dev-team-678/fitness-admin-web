@@ -106,7 +106,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { aiPlanApi } from '@/api/ai/ai-plan'
@@ -137,7 +137,7 @@ interface Adjustment {
 
 const route = useRoute()
 const router = useRouter()
-const planId = Number(route.params.id)
+const planId = computed(() => Number(route.params.id))
 const rulesFormRef = ref<FormInstance>()
 const rulesSubmitting = ref(false)
 
@@ -206,7 +206,7 @@ function statusText(status: string) {
 }
 
 async function loadPlan() {
-  const res = (await aiPlanApi.detail(planId)) as unknown as {
+  const res = (await aiPlanApi.detail(planId.value)) as unknown as {
     data: typeof plan & { workoutDays?: DayPlan[] }
   }
   Object.assign(plan, res.data)
@@ -214,7 +214,7 @@ async function loadPlan() {
 }
 
 async function loadAdjustments() {
-  const res = (await aiPlanApi.adjustments(planId)) as unknown as { data: Adjustment[] }
+  const res = (await aiPlanApi.adjustments(planId.value)) as unknown as { data: Adjustment[] }
   adjustments.value = res.data || []
 }
 
@@ -240,6 +240,15 @@ async function saveRules() {
 function goBack() {
   router.push('/ai/plans')
 }
+
+watch(
+  () => route.params.id,
+  () => {
+    loadPlan()
+    loadAdjustments()
+    loadRules()
+  },
+)
 
 onMounted(() => {
   loadPlan()

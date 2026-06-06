@@ -4,6 +4,9 @@ export const achievementApi = {
   list(params?: Record<string, unknown>) {
     return request.get('/achievement/list', { params })
   },
+  detail(id: number) {
+    return request.get(`/achievement/${id}`)
+  },
   create(data: Record<string, unknown>) {
     return request.post('/achievement', data)
   },

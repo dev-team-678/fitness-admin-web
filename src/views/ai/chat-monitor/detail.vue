@@ -104,7 +104,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { chatMonitorApi } from '@/api/ai/chat-monitor'
@@ -126,7 +126,7 @@ interface Message {
 
 const route = useRoute()
 const router = useRouter()
-const sessionId = Number(route.params.id)
+const sessionId = computed(() => Number(route.params.id))
 
 const session = reactive({
   id: 0,
@@ -153,15 +153,15 @@ const correctionSubmitting = ref(false)
 const currentCorrectionMsg = ref<Message | null>(null)
 
 async function loadSession() {
-  const res = (await chatMonitorApi.sessionDetail(sessionId)) as unknown as { data: typeof session }
+  const res = (await chatMonitorApi.sessionDetail(sessionId.value)) as unknown as { data: typeof session }
   Object.assign(session, res.data)
 }
 
 async function loadMessages() {
   messagesLoading.value = true
   try {
-    const res = (await chatMonitorApi.messages(sessionId)) as unknown as { data: Message[] }
-    messages.value = res.data || []
+    const res = (await chatMonitorApi.messages(sessionId.value)) as unknown as { data: { list: Message[] } }
+    messages.value = res.data?.list || []
   } finally {
     messagesLoading.value = false
   }
@@ -180,7 +180,7 @@ async function submitIssue() {
   }
   issueSubmitting.value = true
   try {
-    await chatMonitorApi.markIssue(sessionId, currentIssueMsg.value!.id, { reason: issueReason.value })
+    await chatMonitorApi.markIssue(sessionId.value, currentIssueMsg.value!.id, { reason: issueReason.value })
     ElMessage.success('已标记问题')
     issueDialogVisible.value = false
   } catch {
@@ -203,7 +203,7 @@ async function submitCorrection() {
   }
   correctionSubmitting.value = true
   try {
-    await chatMonitorApi.updateIssue(sessionId, currentCorrectionMsg.value!.id, {
+    await chatMonitorApi.updateIssue(sessionId.value, currentCorrectionMsg.value!.id, {
       correction: correctionContent.value,
     })
     ElMessage.success('纠正已提交')
@@ -217,7 +217,7 @@ async function submitCorrection() {
 
 async function handleAddToKnowledge(msg: Message) {
   try {
-    await chatMonitorApi.toKnowledge(sessionId, msg.id)
+    await chatMonitorApi.toKnowledge(sessionId.value, msg.id)
     ElMessage.success('已加入知识库')
   } catch {
     ElMessage.error('操作失败')
@@ -227,6 +227,14 @@ async function handleAddToKnowledge(msg: Message) {
 function goBack() {
   router.push('/ai/chat-monitor')
 }
+
+watch(
+  () => route.params.id,
+  () => {
+    loadSession()
+    loadMessages()
+  },
+)
 
 onMounted(() => {
   loadSession()

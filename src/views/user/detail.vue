@@ -204,7 +204,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { ArrowLeft, User, Trophy } from '@element-plus/icons-vue'
@@ -212,7 +212,7 @@ import { userApi } from '@/api/user/user'
 
 const route = useRoute()
 const router = useRouter()
-const userId = Number(route.params.id)
+const userId = computed(() => Number(route.params.id))
 
 const pageLoading = ref(false)
 
@@ -266,7 +266,7 @@ function formatLevel(level: string) {
 async function loadUserDetail() {
   pageLoading.value = true
   try {
-    const res = (await userApi.detail(userId)) as any
+    const res = (await userApi.detail(userId.value)) as any
     Object.assign(user, res.data || {})
   } catch (err: any) {
     ElMessage.error(err.message || '加载用户信息失败')
@@ -281,7 +281,7 @@ async function loadStats() {
 
 async function loadAchievements() {
   try {
-    const res = (await userApi.getAchievements(userId)) as any
+    const res = (await userApi.getAchievements(userId.value)) as any
     achievements.value = res.data || []
   } catch {
     // ignore
@@ -294,7 +294,7 @@ async function loadWorkouts(reset = false) {
     workouts.value = []
   }
   try {
-    const res = (await userApi.getWorkouts(userId, { page: workoutPage.value, pageSize: 10 })) as any
+    const res = (await userApi.getWorkouts(userId.value, { page: workoutPage.value, pageSize: 10 })) as any
     const list = res.data?.list || res.data || []
     if (reset) {
       workouts.value = list
@@ -313,7 +313,7 @@ function loadMoreWorkouts() {
 
 async function loadAiProfile() {
   try {
-    const res = (await userApi.getAiProfile(userId)) as any
+    const res = (await userApi.getAiProfile(userId.value)) as any
     aiProfile.value = res.data || null
   } catch {
     // ignore
@@ -322,7 +322,7 @@ async function loadAiProfile() {
 
 async function loadAiChats() {
   try {
-    const res = (await userApi.getAiChats(userId, { page: 1, pageSize: 5 })) as any
+    const res = (await userApi.getAiChats(userId.value, { page: 1, pageSize: 5 })) as any
     aiChats.value = res.data?.list || res.data || []
   } catch {
     // ignore
@@ -334,10 +334,23 @@ function viewChat(chatId: number) {
 }
 
 function viewAllChats() {
-  router.push({ path: '/ai/chats', query: { user_id: String(userId) } })
+  router.push({ path: '/ai/chats', query: { user_id: String(userId.value) } })
 }
 
 // Init
+watch(
+  () => route.params.id,
+  async () => {
+    await loadUserDetail()
+    await Promise.all([
+      loadAchievements(),
+      loadWorkouts(true),
+      loadAiProfile(),
+      loadAiChats(),
+    ])
+  },
+)
+
 onMounted(async () => {
   await loadUserDetail()
   await Promise.all([

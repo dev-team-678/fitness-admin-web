@@ -106,7 +106,7 @@ function handleAdd() {
 }
 
 function handleEdit(row: Record<string, unknown>) {
-  router.push(`/achievement/edit?id=${row.id}`)
+  router.push(`/achievement/edit/${row.id}`)
 }
 
 async function handleDelete(row: Record<string, unknown>) {

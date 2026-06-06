@@ -77,7 +77,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted, nextTick } from 'vue'
+import { ref, reactive, computed, onMounted, nextTick, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { MdEditor } from 'md-editor-v3'
@@ -148,7 +148,19 @@ async function loadDetail() {
   form.category = d.category
   form.title = d.title
   form.content = d.content
-  form.tags = d.tags || []
+  // tags 可能是数组或 JSON 字符串，统一处理
+  if (Array.isArray(d.tags)) {
+    form.tags = d.tags
+  } else if (typeof d.tags === 'string' && d.tags.trim()) {
+    try {
+      const parsed = JSON.parse(d.tags)
+      form.tags = Array.isArray(parsed) ? parsed : []
+    } catch {
+      form.tags = []
+    }
+  } else {
+    form.tags = []
+  }
   form.source = d.source || ''
   form.status = d.status
 }
@@ -179,12 +191,27 @@ function goBack() {
   router.push('/ai/knowledge')
 }
 
-onMounted(async () => {
+async function initPage() {
   await loadCategories()
   if (isEdit.value) {
     await loadDetail()
+  } else {
+    // 新增时重置表单
+    form.category = ''
+    form.title = ''
+    form.content = ''
+    form.tags = []
+    form.source = ''
+    form.status = 1
   }
-})
+}
+
+watch(
+  () => route.params.id,
+  () => initPage(),
+)
+
+onMounted(() => initPage())
 </script>
 
 <style lang="scss" scoped>

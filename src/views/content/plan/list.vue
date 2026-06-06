@@ -21,9 +21,12 @@
         </el-form-item>
         <el-form-item label="目标">
           <el-select v-model="filters.fitnessGoal" placeholder="全部" clearable style="width: 140px">
-            <el-option label="减脂" value="lose_fat" />
-            <el-option label="增肌" value="gain_muscle" />
-            <el-option label="保持健康" value="keep_fit" />
+            <el-option label="增肌" value="muscle_gain" />
+            <el-option label="减脂" value="fat_loss" />
+            <el-option label="塑形" value="toning" />
+            <el-option label="力量" value="strength" />
+            <el-option label="耐力" value="endurance" />
+            <el-option label="灵活性" value="flexibility" />
           </el-select>
         </el-form-item>
         <el-form-item label="AI 生成">
@@ -163,6 +166,12 @@ function difficultyTagType(val: string) {
 
 function goalLabel(val: string) {
   const map: Record<string, string> = {
+    muscle_gain: '增肌',
+    fat_loss: '减脂',
+    toning: '塑形',
+    strength: '力量',
+    endurance: '耐力',
+    flexibility: '灵活性',
     lose_fat: '减脂',
     gain_muscle: '增肌',
     keep_fit: '保持健康',

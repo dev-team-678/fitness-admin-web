@@ -44,7 +44,10 @@
         <el-table-column prop="category" label="分类" width="120" />
         <el-table-column prop="tags" label="标签" width="200">
           <template #default="{ row }">
-            <el-tag v-for="tag in row.tags" :key="tag" size="small" class="tag-item">{{ tag }}</el-tag>
+            <template v-if="parseTags(row.tags).length">
+              <el-tag v-for="tag in parseTags(row.tags)" :key="tag" size="small" class="tag-item">{{ tag }}</el-tag>
+            </template>
+            <span v-else style="color: #c0c4cc">-</span>
           </template>
         </el-table-column>
         <el-table-column prop="vectorStatus" label="向量状态" width="100">
@@ -112,6 +115,19 @@ const { filters, searchText, getSearchParams, resetFilters } = useTableSearch({
   category: '',
   vectorStatus: '',
 })
+
+function parseTags(tags: unknown): string[] {
+  if (Array.isArray(tags)) return tags
+  if (typeof tags === 'string' && tags.trim()) {
+    try {
+      const parsed = JSON.parse(tags)
+      return Array.isArray(parsed) ? parsed : []
+    } catch {
+      return []
+    }
+  }
+  return []
+}
 
 function vectorStatusType(status: string): 'primary' | 'success' | 'warning' | 'info' | 'danger' | undefined {
   const map: Record<string, 'primary' | 'success' | 'warning' | 'info' | 'danger' | undefined> = {

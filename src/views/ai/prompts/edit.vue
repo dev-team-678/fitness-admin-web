@@ -218,6 +218,16 @@ function goBack() {
   router.push('/ai/safety/prompts')
 }
 
+watch(
+  () => route.params.id,
+  async () => {
+    if (isEdit.value) {
+      await loadDetail()
+      await loadVersions()
+    }
+  },
+)
+
 onMounted(async () => {
   if (isEdit.value) {
     await loadDetail()

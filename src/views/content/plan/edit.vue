@@ -19,16 +19,16 @@
           <el-input v-model="form.name" placeholder="请输入计划名称" maxlength="50" show-word-limit />
         </el-form-item>
 
-        <el-form-item label="难度" prop="difficulty">
-          <el-radio-group v-model="form.difficulty">
-            <el-radio-button :value="1">初级</el-radio-button>
-            <el-radio-button :value="2">中级</el-radio-button>
-            <el-radio-button :value="3">高级</el-radio-button>
+        <el-form-item label="难度" prop="fitnessLevel">
+          <el-radio-group v-model="form.fitnessLevel">
+            <el-radio-button value="beginner">初级</el-radio-button>
+            <el-radio-button value="intermediate">中级</el-radio-button>
+            <el-radio-button value="advanced">高级</el-radio-button>
           </el-radio-group>
         </el-form-item>
 
-        <el-form-item label="训练目标" prop="goal">
-          <el-select v-model="form.goal" placeholder="请选择训练目标" style="width: 240px">
+        <el-form-item label="训练目标" prop="fitnessGoal">
+          <el-select v-model="form.fitnessGoal" placeholder="请选择训练目标" style="width: 240px">
             <el-option label="增肌" value="muscle_gain" />
             <el-option label="减脂" value="fat_loss" />
             <el-option label="塑形" value="toning" />
@@ -40,18 +40,18 @@
 
         <el-row :gutter="16">
           <el-col :span="8">
-            <el-form-item label="周数" prop="weeks">
-              <el-input-number v-model="form.weeks" :min="1" :max="52" />
+            <el-form-item label="周数" prop="durationWeeks">
+              <el-input-number v-model="form.durationWeeks" :min="1" :max="52" />
             </el-form-item>
           </el-col>
           <el-col :span="8">
-            <el-form-item label="每周天数" prop="days_per_week">
-              <el-input-number v-model="form.days_per_week" :min="1" :max="7" />
+            <el-form-item label="每周天数" prop="daysPerWeek">
+              <el-input-number v-model="form.daysPerWeek" :min="1" :max="7" />
             </el-form-item>
           </el-col>
           <el-col :span="8">
-            <el-form-item label="平均时长(分)" prop="avg_duration">
-              <el-input-number v-model="form.avg_duration" :min="5" :max="300" :step="5" />
+            <el-form-item label="平均时长(分)" prop="avgDurationMin">
+              <el-input-number v-model="form.avgDurationMin" :min="5" :max="300" :step="5" />
             </el-form-item>
           </el-col>
         </el-row>
@@ -63,7 +63,7 @@
             :http-request="handleCoverUpload"
             accept="image/*"
           >
-            <img v-if="form.cover_url" :src="form.cover_url" class="cover-preview" />
+            <img v-if="form.coverImage" :src="form.coverImage" class="cover-preview" />
             <el-icon v-else class="cover-placeholder"><Plus /></el-icon>
           </el-upload>
         </el-form-item>
@@ -299,6 +299,7 @@ interface DayExercise {
 }
 
 interface DayPlan {
+  focus?: string
   exercises: DayExercise[]
 }
 
@@ -314,21 +315,21 @@ const currentWeek = ref(1)
 // Form
 const form = reactive({
   name: '',
-  difficulty: 2,
-  goal: '',
-  weeks: 4,
-  days_per_week: 3,
-  avg_duration: 45,
-  cover_url: '',
+  fitnessLevel: 'intermediate',
+  fitnessGoal: '',
+  durationWeeks: 4,
+  daysPerWeek: 3,
+  avgDurationMin: 45,
+  coverImage: '',
   description: '',
 })
 
 const rules = {
   name: [{ required: true, message: '请输入计划名称', trigger: 'blur' }],
-  difficulty: [{ required: true, message: '请选择难度', trigger: 'change' }],
-  goal: [{ required: true, message: '请选择训练目标', trigger: 'change' }],
-  weeks: [{ required: true, message: '请输入周数', trigger: 'blur' }],
-  days_per_week: [{ required: true, message: '请输入每周天数', trigger: 'blur' }],
+  fitnessLevel: [{ required: true, message: '请选择难度', trigger: 'change' }],
+  fitnessGoal: [{ required: true, message: '请选择训练目标', trigger: 'change' }],
+  durationWeeks: [{ required: true, message: '请输入周数', trigger: 'blur' }],
+  daysPerWeek: [{ required: true, message: '请输入每周天数', trigger: 'blur' }],
 }
 
 // Week plan data: weekPlans[week][day] = DayPlan
@@ -412,8 +413,8 @@ async function openExerciseSelector() {
   selectedExercises.value = []
   if (!exerciseLibrary.value.length) {
     try {
-      const res = await exerciseApi.list({ page: 1, pageSize: 500 }) as any
-      exerciseLibrary.value = res.data || []
+      const res = await exerciseApi.list({ pageNum: 1, pageSize: 500 }) as any
+      exerciseLibrary.value = res.data?.list || []
     } catch {
       // handled by interceptor
     }
@@ -443,7 +444,7 @@ function confirmExerciseSelection() {
 async function handleCoverUpload(options: UploadRequestOptions) {
   try {
     const url = await upload(options.file, 'plan-covers')
-    form.cover_url = url
+    form.coverImage = url
     ElMessage.success('上传成功')
   } catch {
     ElMessage.error('上传失败')
@@ -455,24 +456,30 @@ async function handleSave() {
   const valid = await formRef.value?.validate().catch(() => false)
   if (!valid) return
 
-  // Build week_plans array for API
-  const weekPlansArr: any[] = []
-  for (let w = 1; w <= form.weeks; w++) {
+  // Build days array for API (PlanCreateDTO expects flat days list)
+  const daysArr: any[] = []
+  for (let w = 1; w <= form.durationWeeks; w++) {
     const weekData = weekPlans.value[w] || {}
-    const days: any[] = []
     for (let d = 0; d < 7; d++) {
       const dayPlan = weekData[d]
-      days.push({
-        day_index: d,
-        exercises: dayPlan?.exercises || [],
+      daysArr.push({
+        weekNumber: w,
+        dayNumber: d + 1,
+        focus: dayPlan?.focus || '',
+        exercises: (dayPlan?.exercises || []).map((ex: any, idx: number) => ({
+          exerciseId: ex.exercise_id,
+          sets: ex.sets,
+          reps: ex.reps,
+          restSeconds: ex.rest_seconds,
+          sort: idx,
+        })),
       })
     }
-    weekPlansArr.push({ week: w, days })
   }
 
   saving.value = true
   try {
-    const payload = { ...form, week_plans: weekPlansArr }
+    const payload = { ...form, days: daysArr }
     if (isEdit.value) {
       await planApi.update(Number(route.params.id), payload)
       ElMessage.success('保存成功')
@@ -500,21 +507,31 @@ async function loadDetail() {
     const data = res.data
     Object.assign(form, {
       name: data.name,
-      difficulty: data.difficulty,
-      goal: data.goal,
-      weeks: data.weeks,
-      days_per_week: data.days_per_week,
-      avg_duration: data.avg_duration,
-      cover_url: data.cover_url || '',
+      fitnessLevel: data.difficultyLevel || 'intermediate',
+      fitnessGoal: data.fitnessGoal || '',
+      durationWeeks: data.durationWeeks || 4,
+      daysPerWeek: data.daysPerWeek || 3,
+      avgDurationMin: data.avgDurationMin || 45,
+      coverImage: data.coverImageUrl || '',
       description: data.description || '',
     })
-    // Parse week plans
-    if (data.week_plans) {
+    // Parse days into weekPlans structure
+    if (data.days) {
       const plans: Record<number, Record<number, DayPlan>> = {}
-      for (const wp of data.week_plans) {
-        plans[wp.week] = {}
-        for (const day of wp.days) {
-          plans[wp.week][day.day_index] = { exercises: day.exercises || [] }
+      for (const day of data.days) {
+        const week = day.weekNumber || 1
+        const dayIndex = (day.dayOfWeek || 1) - 1
+        if (!plans[week]) plans[week] = {}
+        plans[week][dayIndex] = {
+          focus: day.dayLabel || '',
+          exercises: (day.exercises || []).map((ex: any) => ({
+            exercise_id: ex.exerciseId,
+            exercise_name: ex.exerciseName || '',
+            sets: ex.sets || 3,
+            reps: String(ex.reps || '12'),
+            rest_seconds: ex.restSeconds || 60,
+            notes: ex.notes || '',
+          })),
         }
       }
       weekPlans.value = plans
@@ -530,6 +547,11 @@ watch(
   (val) => {
     if (currentWeek.value > val) currentWeek.value = val
   },
+)
+
+watch(
+  () => route.params.id,
+  () => loadDetail(),
 )
 
 onMounted(() => {

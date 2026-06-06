@@ -13,7 +13,7 @@ export function usePagination(fetchFn: (params: Record<string, unknown>) => Prom
     loading.value = true
     try {
       const res = await fetchFn({
-        page: pagination.page,
+        pageNum: pagination.page,
         pageSize: pagination.pageSize,
         ...extraParams,
       })

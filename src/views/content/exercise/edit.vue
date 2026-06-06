@@ -41,9 +41,9 @@
 
         <el-form-item label="难度" prop="difficulty">
           <el-radio-group v-model="form.difficulty">
-            <el-radio-button :value="1">初级</el-radio-button>
-            <el-radio-button :value="2">中级</el-radio-button>
-            <el-radio-button :value="3">高级</el-radio-button>
+            <el-radio-button value="beginner">初级</el-radio-button>
+            <el-radio-button value="intermediate">中级</el-radio-button>
+            <el-radio-button value="advanced">高级</el-radio-button>
           </el-radio-group>
         </el-form-item>
 
@@ -240,7 +240,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { Plus } from '@element-plus/icons-vue'
@@ -262,7 +262,7 @@ const form = reactive({
   name: '',
   nameEn: '',
   categoryId: null as number | null,
-  difficulty: 1,
+  difficulty: 'beginner',
   exerciseType: 'strength',
   equipment: 'none',
   primaryMuscles: [] as string[],
@@ -395,6 +395,14 @@ async function loadDetail() {
     // handled by interceptor
   }
 }
+
+watch(
+  () => route.params.id,
+  () => {
+    loadOptions()
+    loadDetail()
+  },
+)
 
 onMounted(() => {
   loadOptions()

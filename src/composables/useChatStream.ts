@@ -13,7 +13,7 @@ export function useChatStream(sessionId: number) {
 
   function connect() {
     status.value = 'connecting'
-    eventSource = new EventSource(`/api/admin/v1/ai/chat-sessions/${sessionId}/stream`)
+    eventSource = new EventSource(`/api/v1/ai/chat-sessions/${sessionId}/stream`)
 
     eventSource.onmessage = (event) => {
       messages.value.push(JSON.parse(event.data))

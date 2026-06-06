@@ -609,7 +609,7 @@ onBeforeUnmount(() => {
   transition: background 0.2s;
 
   &:hover {
-    background: darken($bg-color, 2%);
+    background: #EBEBEF;
   }
 
   &__icon {
