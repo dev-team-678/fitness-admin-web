@@ -7,7 +7,7 @@ export function useTableSearch<T extends Record<string, unknown>>(defaultFilters
   function getSearchParams(): Record<string, unknown> {
     const params: Record<string, unknown> = {}
     for (const [key, value] of Object.entries(filters)) {
-      if (value !== '' && value !== null && value !== undefined) {
+      if (value !== '' && value !== null && value !== undefined && !(typeof value === 'number' && isNaN(value))) {
         params[key] = value
       }
     }

@@ -45,7 +45,7 @@
             <div v-if="msg.role === 'assistant' && msg.ragReferences?.length" class="rag-references">
               <div class="rag-title">RAG 引用：</div>
               <div v-for="ref in msg.ragReferences" :key="ref.id" class="rag-item">
-                <el-tag size="small" type="success">相关度 {{ (ref.score * 100).toFixed(0) }}%</el-tag>
+                <el-tag size="small" type="success">相关度 {{ ref.score != null ? (ref.score * 100).toFixed(0) + '%' : 'N/A' }}</el-tag>
                 <span class="rag-item-title">{{ ref.title }}</span>
                 <el-tag size="small" type="info">{{ ref.categoryName }}</el-tag>
               </div>

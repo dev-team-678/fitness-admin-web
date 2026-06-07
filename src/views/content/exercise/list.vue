@@ -13,7 +13,7 @@
           />
         </el-form-item>
         <el-form-item label="部位">
-          <el-select v-model="filters.categoryId" placeholder="全部" clearable style="width: 120px">
+          <el-select v-model="filters.bodyPartId" placeholder="全部" clearable style="width: 120px">
             <el-option
               v-for="item in bodyPartOptions"
               :key="item.id"
@@ -192,7 +192,7 @@ import { useTableSearch } from '@/composables/useTableSearch'
 const router = useRouter()
 
 const { filters, searchText, getSearchParams, resetFilters } = useTableSearch({
-  categoryId: '',
+  bodyPartId: '' as string | number,
   exerciseType: '',
   difficulty: '',
   equipment: '',
