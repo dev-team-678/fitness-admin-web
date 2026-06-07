@@ -248,11 +248,11 @@ import type { FormInstance, UploadRequestOptions } from 'element-plus'
 import { exerciseApi } from '@/api/content/exercise'
 import { categoryApi } from '@/api/content/category'
 import { bodyPartApi } from '@/api/content/body-part'
-import { useCosUpload } from '@/composables/useCosUpload'
+import { useQiniuUpload } from '@/composables/useQiniuUpload'
 
 const route = useRoute()
 const router = useRouter()
-const { upload } = useCosUpload()
+const { upload } = useQiniuUpload()
 
 const isEdit = computed(() => !!route.params.id)
 const formRef = ref<FormInstance>()

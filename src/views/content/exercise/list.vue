@@ -180,7 +180,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onActivated } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { Search, Plus } from '@element-plus/icons-vue'
@@ -286,6 +286,10 @@ async function loadBodyParts() {
 onMounted(() => {
   loadData()
   loadBodyParts()
+})
+
+onActivated(() => {
+  loadData()
 })
 </script>
 

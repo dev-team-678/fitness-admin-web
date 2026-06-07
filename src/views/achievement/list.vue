@@ -66,7 +66,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { onMounted, onActivated } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { achievementApi } from '@/api/achievement/achievement'
@@ -125,6 +125,10 @@ async function handleDelete(row: Record<string, unknown>) {
 }
 
 onMounted(() => {
+  loadData()
+})
+
+onActivated(() => {
   loadData()
 })
 </script>

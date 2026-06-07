@@ -169,7 +169,7 @@ import { adminApi } from '@/api/system/admin'
 import { roleApi } from '@/api/system/role'
 import { userApi } from '@/api/user/user'
 import { usePagination } from '@/composables/usePagination'
-import { useCosUpload } from '@/composables/useCosUpload'
+import { useQiniuUpload } from '@/composables/useQiniuUpload'
 
 interface AdminItem {
   id: number
@@ -205,7 +205,7 @@ const submitting = ref(false)
 const formRef = ref<FormInstance>()
 const editId = ref(0)
 const roleOptions = ref<RoleOption[]>([])
-const { upload, uploading } = useCosUpload()
+const { upload, uploading } = useQiniuUpload()
 
 const editForm = reactive({
   username: '',

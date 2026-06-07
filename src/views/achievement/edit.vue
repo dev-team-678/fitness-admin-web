@@ -33,6 +33,7 @@
             :show-file-list="false"
             :before-upload="beforeIconUpload"
             :http-request="handleIconUpload"
+            :disabled="uploading"
             accept="image/*"
           >
             <el-image
@@ -41,6 +42,7 @@
               style="width: 80px; height: 80px"
               fit="contain"
             />
+            <div v-else-if="uploading" class="icon-uploader-loading">上传中</div>
             <el-icon v-else class="icon-uploader-placeholder"><Plus /></el-icon>
           </el-upload>
         </el-form-item>
@@ -84,11 +86,13 @@ import { ElMessage } from 'element-plus'
 import { Plus } from '@element-plus/icons-vue'
 import type { FormInstance, UploadRequestOptions } from 'element-plus'
 import { achievementApi } from '@/api/achievement/achievement'
+import { useQiniuUpload } from '@/composables/useQiniuUpload'
 
 const route = useRoute()
 const router = useRouter()
 const formRef = ref<FormInstance>()
 const submitting = ref(false)
+const { upload, uploading } = useQiniuUpload()
 
 const isEdit = computed(() => !!route.params.id)
 
@@ -120,28 +124,23 @@ const rules = {
 
 function beforeIconUpload(file: File) {
   const isImage = file.type.startsWith('image/')
-  const isLt2M = file.size / 1024 / 1024 < 2
+  const isLt5M = file.size / 1024 / 1024 < 5
   if (!isImage) {
     ElMessage.error('只能上传图片文件')
     return false
   }
-  if (!isLt2M) {
-    ElMessage.error('图片大小不能超过 2MB')
+  if (!isLt5M) {
+    ElMessage.error('图片大小不能超过 5MB')
     return false
   }
   return true
 }
 
 async function handleIconUpload(options: UploadRequestOptions) {
-  // Assumes a COS upload utility exists; fallback to FileReader for local preview
   try {
-    const reader = new FileReader()
-    reader.onload = (e) => {
-      form.iconUrl = e.target?.result as string
-    }
-    reader.readAsDataURL(options.file)
-    // In production, replace with actual upload and set form.iconUrl to the returned URL
-    ElMessage.info('图标已选择，保存时将上传')
+    const fileUrl = await upload(options.file, 'achievement-icons')
+    form.iconUrl = fileUrl
+    ElMessage.success('图标上传成功')
   } catch {
     ElMessage.error('图标上传失败')
   }
@@ -231,6 +230,11 @@ onMounted(() => {
   .icon-uploader-placeholder {
     font-size: 28px;
     color: #8c939d;
+  }
+
+  .icon-uploader-loading {
+    font-size: 12px;
+    color: #409eff;
   }
 }
 </style>

@@ -287,7 +287,7 @@ import { Plus, Search } from '@element-plus/icons-vue'
 import type { FormInstance, UploadRequestOptions } from 'element-plus'
 import { planApi } from '@/api/content/plan'
 import { exerciseApi } from '@/api/content/exercise'
-import { useCosUpload } from '@/composables/useCosUpload'
+import { useQiniuUpload } from '@/composables/useQiniuUpload'
 
 interface DayExercise {
   exercise_id: number
@@ -305,7 +305,7 @@ interface DayPlan {
 
 const route = useRoute()
 const router = useRouter()
-const { upload } = useCosUpload()
+const { upload } = useQiniuUpload()
 
 const isEdit = computed(() => !!route.params.id)
 const formRef = ref<FormInstance>()
