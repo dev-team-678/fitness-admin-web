@@ -142,7 +142,7 @@ async function loadCategories() {
 async function loadDetail() {
   if (!route.params.id) return
   const res = (await knowledgeApi.detail(Number(route.params.id))) as unknown as {
-    data: { category: string; title: string; content: string; tags: string[]; source: string; status: number }
+    data: { category: string; title: string; content: string; tags: string[] | string; source: string; status: number }
   }
   const d = res.data
   form.category = d.category

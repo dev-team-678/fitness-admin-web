@@ -17,13 +17,12 @@ export function useCosUpload() {
       // 2. Upload directly to COS (no-referrer 避免跨域防盗链拦截)
       await axios.put(uploadUrl, file, {
         headers: { 'Content-Type': file.type },
-        referrerPolicy: 'no-referrer',
-        onUploadProgress: (e) => {
+        onUploadProgress: (e: { loaded: number; total?: number }) => {
           if (e.total) {
             progress.value = Math.round((e.loaded / e.total) * 100)
           }
         },
-      })
+      } as Record<string, unknown>)
 
       return fileUrl
     } finally {

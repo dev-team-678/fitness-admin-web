@@ -104,6 +104,7 @@ const form = reactive({
   name: '',
   description: '',
   icon: '',
+  iconUrl: '',
   conditionType: '',
   conditionValue: 1,
   badgeColor: '#409EFF',

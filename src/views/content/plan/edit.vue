@@ -322,6 +322,7 @@ const form = reactive({
   avgDurationMin: 45,
   coverImage: '',
   description: '',
+  weeks: 4 as number,
 })
 
 const rules = {
@@ -514,6 +515,7 @@ async function loadDetail() {
       avgDurationMin: data.avgDurationMin || 45,
       coverImage: data.coverImageUrl || '',
       description: data.description || '',
+      weeks: data.durationWeeks || 4,
     })
     // Parse days into weekPlans structure
     if (data.days) {
