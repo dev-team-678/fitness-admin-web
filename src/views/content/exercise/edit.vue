@@ -257,6 +257,10 @@ const router = useRouter()
 const { upload } = useQiniuUpload()
 
 const isEdit = computed(() => !!route.params.id)
+const safeId = computed(() => {
+  const id = Number(route.params.id)
+  return isNaN(id) ? 0 : id
+})
 const formRef = ref<FormInstance>()
 const saving = ref(false)
 
@@ -349,7 +353,7 @@ async function handleSave() {
   saving.value = true
   try {
     if (isEdit.value) {
-      await exerciseApi.update(Number(route.params.id), payload)
+      await exerciseApi.update(safeId.value, payload)
       ElMessage.success('保存成功')
     } else {
       await exerciseApi.create(payload)
@@ -383,7 +387,7 @@ async function loadOptions() {
 async function loadDetail() {
   if (!isEdit.value) return
   try {
-    const res = await exerciseApi.detail(Number(route.params.id)) as any
+    const res = await exerciseApi.detail(safeId.value) as any
     const data = res.data
 
     // Parse JSON strings to arrays

@@ -103,6 +103,10 @@ const formRef = ref<FormInstance>()
 const submitting = ref(false)
 
 const isEdit = computed(() => !!route.params.id)
+const safeId = computed(() => {
+  const id = Number(route.params.id)
+  return isNaN(id) ? 0 : id
+})
 
 const form = reactive({
   ruleType: '',
@@ -126,7 +130,7 @@ const rules = {
 
 async function loadDetail() {
   if (!route.params.id) return
-  const res = (await safetyApi.ruleDetail(Number(route.params.id))) as unknown as { data: typeof form }
+  const res = (await safetyApi.ruleDetail(safeId.value)) as unknown as { data: typeof form }
   Object.assign(form, res.data)
 }
 
@@ -137,7 +141,7 @@ async function handleSubmit() {
   submitting.value = true
   try {
     if (isEdit.value) {
-      await safetyApi.updateRule(Number(route.params.id), { ...form })
+      await safetyApi.updateRule(safeId.value, { ...form })
       ElMessage.success('更新成功')
     } else {
       await safetyApi.createRule({ ...form })

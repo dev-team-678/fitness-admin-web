@@ -119,6 +119,7 @@ function getFullPath(...parts: string[]): string {
 </script>
 
 <style lang="scss" scoped>
+@use 'sass:color';
 @use '@/styles/variables' as *;
 
 /* ============================
@@ -356,7 +357,7 @@ $collapse-btn-hover: #e8f5e9;
 
   &:hover {
     background: $item-hover-bg;
-    color: darken($header-from, 8%);
+    color: color.adjust($header-from, $lightness: -8%);
 
     .menu-icon {
       color: $header-from;

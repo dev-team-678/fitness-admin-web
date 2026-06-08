@@ -95,6 +95,10 @@ const submitting = ref(false)
 const { upload, uploading } = useQiniuUpload()
 
 const isEdit = computed(() => !!route.params.id)
+const safeId = computed(() => {
+  const id = Number(route.params.id)
+  return isNaN(id) ? 0 : id
+})
 
 const conditionTypeMap: Record<string, string> = {
   workout_count: '训练次数',
@@ -149,7 +153,7 @@ async function handleIconUpload(options: UploadRequestOptions) {
 async function loadDetail() {
   if (!route.params.id) return
   try {
-    const res = (await achievementApi.detail(Number(route.params.id))) as unknown as {
+    const res = (await achievementApi.detail(safeId.value)) as unknown as {
       data: Record<string, unknown>
     }
     const item = res.data
@@ -176,7 +180,7 @@ async function handleSubmit() {
   submitting.value = true
   try {
     if (isEdit.value) {
-      await achievementApi.update(Number(route.params.id), { ...form })
+      await achievementApi.update(safeId.value, { ...form })
       ElMessage.success('更新成功')
     } else {
       await achievementApi.create({ ...form })

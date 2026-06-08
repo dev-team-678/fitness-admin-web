@@ -58,9 +58,9 @@
 
       <el-table v-loading="loading" :data="tableData" border stripe>
         <el-table-column prop="userId" label="用户 ID" width="100" />
-        <el-table-column prop="fitnessGoal" label="训练目标" width="100">
+        <el-table-column prop="goal" label="训练目标" width="100">
           <template #default="{ row }">
-            <el-tag size="small">{{ goalText(row.fitnessGoal) }}</el-tag>
+            <el-tag size="small">{{ goalText(row.goal) }}</el-tag>
           </template>
         </el-table-column>
         <el-table-column prop="splitType" label="训练分化" width="110">
@@ -183,6 +183,10 @@ function handleReset() {
 }
 
 function handleViewDetail(row: { id: number }) {
+  if (!row.id || isNaN(Number(row.id))) {
+    ElMessage.error('计划ID无效')
+    return
+  }
   router.push(`/ai/plans/detail/${row.id}`)
 }
 

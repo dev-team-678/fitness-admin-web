@@ -118,6 +118,10 @@ const submitting = ref(false)
 const rollbackLoading = ref(false)
 
 const isEdit = computed(() => !!route.params.id && route.params.id !== '0')
+const safeId = computed(() => {
+  const id = Number(route.params.id)
+  return isNaN(id) ? 0 : id
+})
 
 const form = reactive({
   name: '',
@@ -148,7 +152,7 @@ const versions = ref<Version[]>([])
 
 async function loadDetail() {
   if (!route.params.id) return
-  const res = (await promptApi.detail(Number(route.params.id))) as unknown as {
+  const res = (await promptApi.detail(safeId.value)) as unknown as {
     data: { name: string; content: string; templateKey: string; version: number; isActive: number }
   }
   const d = res.data
@@ -161,7 +165,7 @@ async function loadDetail() {
 
 async function loadVersions() {
   if (!route.params.id) return
-  const res = (await promptApi.versions(Number(route.params.id))) as unknown as { data: Version[] }
+  const res = (await promptApi.versions(safeId.value)) as unknown as { data: Version[] }
   versions.value = res.data || []
 }
 
@@ -172,7 +176,7 @@ async function handleSubmit() {
   submitting.value = true
   try {
     if (isEdit.value) {
-      await promptApi.update(Number(route.params.id), { ...form })
+      await promptApi.update(safeId.value, { ...form })
       ElMessage.success('已保存为新版本')
       await loadDetail()
       await loadVersions()
@@ -194,7 +198,7 @@ async function handleRollback() {
   })
   rollbackLoading.value = true
   try {
-    await promptApi.rollback(Number(route.params.id))
+    await promptApi.rollback(safeId.value)
     ElMessage.success('回滚成功')
     await loadDetail()
     await loadVersions()

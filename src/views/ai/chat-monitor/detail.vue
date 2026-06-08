@@ -126,7 +126,10 @@ interface Message {
 
 const route = useRoute()
 const router = useRouter()
-const sessionId = computed(() => Number(route.params.id))
+const sessionId = computed(() => {
+  const id = Number(route.params.id)
+  return isNaN(id) ? 0 : id
+})
 
 const session = reactive({
   id: 0,

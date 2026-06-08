@@ -137,7 +137,10 @@ interface Adjustment {
 
 const route = useRoute()
 const router = useRouter()
-const planId = computed(() => Number(route.params.id))
+const planId = computed(() => {
+  const id = Number(route.params.id)
+  return isNaN(id) ? 0 : id
+})
 const rulesFormRef = ref<FormInstance>()
 const rulesSubmitting = ref(false)
 

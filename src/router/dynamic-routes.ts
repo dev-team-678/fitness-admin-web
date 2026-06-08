@@ -259,7 +259,7 @@ export const dynamicRoutes: RouteRecordRaw[] = [
                 path: 'create',
                 name: 'AiKnowledgeCreate',
                 component: () => import('@/views/ai/knowledge/edit.vue'),
-                meta: { title: '新增知识', permission: 'ai:knowledge:create' },
+                meta: { title: '新增知识', hidden: true, permission: 'ai:knowledge:create' },
               },
               {
                 path: 'edit/:id',
@@ -334,7 +334,7 @@ export const dynamicRoutes: RouteRecordRaw[] = [
                 path: 'rules/create',
                 name: 'AiSafetyCreate',
                 component: () => import('@/views/ai/safety/edit.vue'),
-                meta: { title: '新增规则', permission: 'ai:safety:create' },
+                meta: { title: '新增规则', hidden: true, permission: 'ai:safety:create' },
               },
               {
                 path: 'rules/edit/:id',

@@ -100,6 +100,10 @@ interface Category {
 const categories = ref<Category[]>([])
 
 const isEdit = computed(() => !!route.params.id)
+const safeId = computed(() => {
+  const id = Number(route.params.id)
+  return isNaN(id) ? 0 : id
+})
 
 const form = reactive({
   category: '',
@@ -141,7 +145,7 @@ async function loadCategories() {
 
 async function loadDetail() {
   if (!route.params.id) return
-  const res = (await knowledgeApi.detail(Number(route.params.id))) as unknown as {
+  const res = (await knowledgeApi.detail(safeId.value)) as unknown as {
     data: { category: string; title: string; content: string; tags: string[] | string; source: string; status: number }
   }
   const d = res.data
@@ -173,7 +177,7 @@ async function handleSubmit() {
   try {
     const payload = { ...form }
     if (isEdit.value) {
-      await knowledgeApi.update(Number(route.params.id), payload)
+      await knowledgeApi.update(safeId.value, payload)
       ElMessage.success('更新成功')
     } else {
       await knowledgeApi.create(payload)

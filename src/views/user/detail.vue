@@ -149,15 +149,38 @@
       <div v-if="aiProfile">
         <el-descriptions :column="2" border>
           <el-descriptions-item label="伤病情况">
-            {{ aiProfile.injuries || '无' }}
+            <div v-if="formatArray(aiProfile.injuries).length">
+              <el-tag
+                v-for="item in formatArray(aiProfile.injuries)"
+                :key="item"
+                class="equipment-tag"
+                effect="plain"
+                size="small"
+                type="danger"
+              >
+                {{ item }}
+              </el-tag>
+            </div>
+            <span v-else>无</span>
           </el-descriptions-item>
           <el-descriptions-item label="健康状态">
-            {{ Array.isArray(aiProfile.healthConditions) ? aiProfile.healthConditions.join('、') : (aiProfile.healthConditions || '-') }}
+            <div v-if="formatArray(aiProfile.healthConditions).length">
+              <el-tag
+                v-for="item in formatArray(aiProfile.healthConditions)"
+                :key="item"
+                class="equipment-tag"
+                effect="plain"
+                size="small"
+              >
+                {{ item }}
+              </el-tag>
+            </div>
+            <span v-else>-</span>
           </el-descriptions-item>
           <el-descriptions-item label="可用器材" :span="2">
-            <div v-if="aiProfile.availableEquipment && aiProfile.availableEquipment.length">
+            <div v-if="formatArray(aiProfile.availableEquipment).length">
               <el-tag
-                v-for="eq in aiProfile.availableEquipment"
+                v-for="eq in formatArray(aiProfile.availableEquipment)"
                 :key="eq"
                 class="equipment-tag"
                 effect="plain"
@@ -169,7 +192,19 @@
             <span v-else>-</span>
           </el-descriptions-item>
           <el-descriptions-item label="训练偏好" :span="2">
-            {{ aiProfile.trainingPreferences || '-' }}
+            <div v-if="formatArray(aiProfile.trainingPreferences).length">
+              <el-tag
+                v-for="item in formatArray(aiProfile.trainingPreferences)"
+                :key="item"
+                class="equipment-tag"
+                effect="plain"
+                size="small"
+                type="success"
+              >
+                {{ item }}
+              </el-tag>
+            </div>
+            <span v-else>-</span>
           </el-descriptions-item>
           <el-descriptions-item label="AI 备注" :span="2">
             <div class="ai-notes">{{ aiProfile.aiNotes || '-' }}</div>
@@ -212,7 +247,10 @@ import { userApi } from '@/api/user/user'
 
 const route = useRoute()
 const router = useRouter()
-const userId = computed(() => Number(route.params.id))
+const userId = computed(() => {
+  const id = Number(route.params.id)
+  return isNaN(id) ? 0 : id
+})
 
 const pageLoading = ref(false)
 
@@ -260,6 +298,21 @@ function formatGoal(goal: string) {
 
 function formatLevel(level: string) {
   return levelMap[level] || level || '-'
+}
+
+function formatArray(value: any): string[] {
+  if (Array.isArray(value)) {
+    return value
+  }
+  if (typeof value === 'string' && value.startsWith('[')) {
+    try {
+      const parsed = JSON.parse(value)
+      return Array.isArray(parsed) ? parsed : [value]
+    } catch {
+      return value ? [value] : []
+    }
+  }
+  return value ? [value] : []
 }
 
 // Load data

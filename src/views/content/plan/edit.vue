@@ -308,6 +308,10 @@ const router = useRouter()
 const { upload } = useQiniuUpload()
 
 const isEdit = computed(() => !!route.params.id)
+const safeId = computed(() => {
+  const id = Number(route.params.id)
+  return isNaN(id) ? 0 : id
+})
 const formRef = ref<FormInstance>()
 const saving = ref(false)
 const currentWeek = ref(1)
@@ -482,7 +486,7 @@ async function handleSave() {
   try {
     const payload = { ...form, days: daysArr }
     if (isEdit.value) {
-      await planApi.update(Number(route.params.id), payload)
+      await planApi.update(safeId.value, payload)
       ElMessage.success('保存成功')
     } else {
       await planApi.create(payload)
@@ -504,7 +508,7 @@ function goBack() {
 async function loadDetail() {
   if (!isEdit.value) return
   try {
-    const res = await planApi.detail(Number(route.params.id)) as any
+    const res = await planApi.detail(safeId.value) as any
     const data = res.data
     Object.assign(form, {
       name: data.name,
