@@ -20,8 +20,8 @@
         :tree-props="{ children: 'children', hasChildren: 'hasChildren' }"
       >
         <el-table-column prop="name" label="分类名称" min-width="240" />
-        <el-table-column prop="sort_order" label="排序" width="80" align="center" />
-        <el-table-column prop="exercise_count" label="动作数" width="80" align="center" />
+        <el-table-column prop="sortOrder" label="排序" width="80" align="center" />
+        <el-table-column prop="exerciseCount" label="动作数" width="80" align="center" />
         <el-table-column label="操作" width="220" align="center">
           <template #default="{ row }">
             <el-button link type="primary" size="small" @click="handleAdd(row)">
@@ -55,7 +55,7 @@
           <el-input v-model="dialogForm.name" placeholder="请输入分类名称" maxlength="30" />
         </el-form-item>
         <el-form-item label="排序">
-          <el-input-number v-model="dialogForm.sort_order" :min="0" :max="9999" />
+          <el-input-number v-model="dialogForm.sortOrder" :min="0" :max="9999" />
         </el-form-item>
       </el-form>
 
@@ -77,9 +77,9 @@ import { categoryApi } from '@/api/content/category'
 interface CategoryItem {
   id: number
   name: string
-  parent_id: number | null
-  sort_order: number
-  exercise_count: number
+  parentId: number | null
+  sortOrder: number
+  exerciseCount: number
   children?: CategoryItem[]
 }
 
@@ -97,8 +97,8 @@ const treeData = computed(() => {
 
   for (const item of rawData.value) {
     const node = map.get(item.id)!
-    if (item.parent_id && map.has(item.parent_id)) {
-      map.get(item.parent_id)!.children!.push(node)
+    if (item.parentId && map.has(item.parentId)) {
+      map.get(item.parentId)!.children!.push(node)
     } else {
       roots.push(node)
     }
@@ -116,7 +116,7 @@ const parentId = ref<number | null>(null)
 
 const dialogForm = reactive({
   name: '',
-  sort_order: 0,
+  sortOrder: 0,
 })
 
 const dialogRules = {
@@ -135,15 +135,15 @@ function handleAdd(parent?: CategoryItem) {
   editingId.value = null
   parentId.value = parent?.id || null
   dialogForm.name = ''
-  dialogForm.sort_order = 0
+  dialogForm.sortOrder = 0
   dialogVisible.value = true
 }
 
 function handleEdit(row: CategoryItem) {
   editingId.value = row.id
-  parentId.value = row.parent_id
+  parentId.value = row.parentId
   dialogForm.name = row.name
-  dialogForm.sort_order = row.sort_order || 0
+  dialogForm.sortOrder = row.sortOrder || 0
   dialogVisible.value = true
 }
 
@@ -156,7 +156,7 @@ async function handleSubmit() {
     if (editingId.value) {
       await categoryApi.update(editingId.value, {
         name: dialogForm.name,
-        sort_order: dialogForm.sort_order,
+        sortOrder: dialogForm.sortOrder,
       } as any)
       ElMessage.success('编辑成功')
     } else {

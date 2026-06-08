@@ -14,9 +14,8 @@
       <el-table v-loading="loading" :data="tableData" border stripe>
         <el-table-column prop="id" label="ID" width="80" align="center" />
         <el-table-column prop="name" label="部位名称" min-width="200" />
-        <el-table-column prop="name_en" label="英文名" min-width="160" />
-        <el-table-column prop="sort_order" label="排序" width="80" align="center" />
-        <el-table-column prop="exercise_count" label="动作数" width="80" align="center" />
+        <el-table-column prop="sortOrder" label="排序" width="80" align="center" />
+        <el-table-column prop="exerciseCount" label="动作数" width="80" align="center" />
         <el-table-column label="操作" width="150" align="center">
           <template #default="{ row }">
             <el-button link type="primary" size="small" @click="handleEdit(row)">
@@ -43,11 +42,8 @@
         <el-form-item label="部位名称" prop="name">
           <el-input v-model="dialogForm.name" placeholder="请输入部位名称" maxlength="30" />
         </el-form-item>
-        <el-form-item label="英文名">
-          <el-input v-model="dialogForm.name_en" placeholder="英文名称" maxlength="60" />
-        </el-form-item>
         <el-form-item label="排序">
-          <el-input-number v-model="dialogForm.sort_order" :min="0" :max="9999" />
+          <el-input-number v-model="dialogForm.sortOrder" :min="0" :max="9999" />
         </el-form-item>
       </el-form>
 
@@ -69,9 +65,8 @@ import { bodyPartApi } from '@/api/content/body-part'
 interface BodyPartItem {
   id: number
   name: string
-  name_en: string
-  sort_order: number
-  exercise_count: number
+  sortOrder: number
+  exerciseCount: number
 }
 
 const loading = ref(false)
@@ -85,8 +80,7 @@ const editingId = ref<number | null>(null)
 
 const dialogForm = reactive({
   name: '',
-  name_en: '',
-  sort_order: 0,
+  sortOrder: 0,
 })
 
 const dialogRules = {
@@ -96,16 +90,14 @@ const dialogRules = {
 function handleAdd() {
   editingId.value = null
   dialogForm.name = ''
-  dialogForm.name_en = ''
-  dialogForm.sort_order = 0
+  dialogForm.sortOrder = 0
   dialogVisible.value = true
 }
 
 function handleEdit(row: BodyPartItem) {
   editingId.value = row.id
   dialogForm.name = row.name
-  dialogForm.name_en = row.name_en || ''
-  dialogForm.sort_order = row.sort_order || 0
+  dialogForm.sortOrder = row.sortOrder || 0
   dialogVisible.value = true
 }
 
@@ -118,15 +110,13 @@ async function handleSubmit() {
     if (editingId.value) {
       await bodyPartApi.update(editingId.value, {
         name: dialogForm.name,
-        name_en: dialogForm.name_en,
-        sort_order: dialogForm.sort_order,
+        sortOrder: dialogForm.sortOrder,
       } as any)
       ElMessage.success('编辑成功')
     } else {
       await bodyPartApi.create({
         name: dialogForm.name,
-        name_en: dialogForm.name_en,
-        sort_order: dialogForm.sort_order,
+        sortOrder: dialogForm.sortOrder,
       } as any)
       ElMessage.success('新增成功')
     }

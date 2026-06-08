@@ -29,14 +29,16 @@
         </el-row>
 
         <el-form-item label="所属分类" prop="categoryId">
-          <el-select v-model="form.categoryId" placeholder="请选择分类" style="width: 240px">
-            <el-option
-              v-for="cat in categoryOptions"
-              :key="cat.id"
-              :label="cat.name"
-              :value="cat.id"
-            />
-          </el-select>
+          <el-tree-select
+            v-model="form.categoryId"
+            :data="categoryTree"
+            :props="{ label: 'name', children: 'children' }"
+            node-key="id"
+            check-strictly
+            :render-after-expand="false"
+            placeholder="请选择分类"
+            style="width: 320px"
+          />
         </el-form-item>
 
         <el-form-item label="难度" prop="difficulty">
@@ -285,8 +287,36 @@ const rules = {
   equipment: [{ required: true, message: '请选择器械', trigger: 'change' }],
 }
 
-const categoryOptions = ref<{ id: number; name: string }[]>([])
+interface CategoryNode {
+  id: number
+  name: string
+  parentId: number | null
+  children?: CategoryNode[]
+}
+
+const categoryOptions = ref<CategoryNode[]>([])
 const bodyPartOptions = ref<{ id: number; name: string }[]>([])
+
+// Build tree from flat category list
+const categoryTree = computed(() => {
+  const map = new Map<number, CategoryNode>()
+  const roots: CategoryNode[] = []
+
+  for (const item of categoryOptions.value) {
+    map.set(item.id, { ...item, children: [] })
+  }
+
+  for (const item of categoryOptions.value) {
+    const node = map.get(item.id)!
+    if (item.parentId && map.has(item.parentId)) {
+      map.get(item.parentId)!.children!.push(node)
+    } else {
+      roots.push(node)
+    }
+  }
+
+  return roots
+})
 
 async function handleMediaUpload(options: UploadRequestOptions, type: 'image' | 'video') {
   const dir = type === 'image' ? 'exercise-images' : 'exercise-videos'

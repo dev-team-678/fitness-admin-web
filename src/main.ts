@@ -6,11 +6,19 @@ import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 import App from './App.vue'
 import router from './router'
 import { vPermission } from './components/Permission'
+import SvgIcon from './components/SvgIcon.vue'
+import { loadSvgIcons } from './icons'
 import 'element-plus/dist/index.css'
 import './styles/global.scss'
 
+// 必须在 App 挂载前注入 SVG 精灵图到 DOM
+loadSvgIcons()
+
 const app = createApp(App)
 const pinia = createPinia()
+
+// 全局注册 SvgIcon 组件
+app.component('SvgIcon', SvgIcon)
 
 for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
   app.component(key, component)

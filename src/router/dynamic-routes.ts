@@ -13,7 +13,7 @@ export const dynamicRoutes: RouteRecordRaw[] = [
         path: 'dashboard',
         name: 'Dashboard',
         component: () => import('@/views/dashboard/index.vue'),
-        meta: { title: '📊 数据看板', icon: 'DataBoard', permission: 'dashboard:read' },
+        meta: { title: '数据看板', icon: 'dashboard', permission: 'dashboard:read' },
       },
 
       // ============================================================
@@ -22,7 +22,7 @@ export const dynamicRoutes: RouteRecordRaw[] = [
       {
         path: 'user',
         name: 'User',
-        meta: { title: '👥 用户管理', icon: 'User', permission: 'user:read' },
+        meta: { title: '用户管理', icon: 'user', permission: 'user:read' },
         redirect: '/user/list',
         children: [
           {
@@ -47,7 +47,7 @@ export const dynamicRoutes: RouteRecordRaw[] = [
       {
         path: 'content',
         name: 'Content',
-        meta: { title: '📋 内容管理', icon: 'Document', permission: 'content:read' },
+        meta: { title: '内容管理', icon: 'form', permission: 'content:read' },
         redirect: '/content/plan',
         children: [
           // --- 训练计划 ---
@@ -94,7 +94,7 @@ export const dynamicRoutes: RouteRecordRaw[] = [
                 path: 'create',
                 name: 'ExerciseCreate',
                 component: () => import('@/views/content/exercise/edit.vue'),
-                meta: { title: '新增动作', permission: 'exercise:create' },
+                meta: { title: '新增动作', hidden: true, permission: 'exercise:create' },
               },
               {
                 path: 'edit/:id',
@@ -125,7 +125,7 @@ export const dynamicRoutes: RouteRecordRaw[] = [
       {
         path: 'workout',
         name: 'Workout',
-        meta: { title: '📈 训练数据', icon: 'TrendCharts', permission: 'workout:read' },
+        meta: { title: '训练数据', icon: 'example', permission: 'workout:read' },
         redirect: '/workout/analytics',
         children: [
           {
@@ -149,7 +149,7 @@ export const dynamicRoutes: RouteRecordRaw[] = [
       {
         path: 'body',
         name: 'Body',
-        meta: { title: '📏 身体数据', icon: 'Odometer', permission: 'body:read' },
+        meta: { title: '身体数据', icon: 'table', permission: 'body:read' },
         redirect: '/body/metrics',
         children: [
           {
@@ -167,7 +167,7 @@ export const dynamicRoutes: RouteRecordRaw[] = [
       {
         path: 'achievement',
         name: 'Achievement',
-        meta: { title: '🏆 成就打卡', icon: 'Medal', permission: 'achievement:read' },
+        meta: { title: '成就打卡', icon: 'nested', permission: 'achievement:read' },
         redirect: '/achievement/list',
         children: [
           {
@@ -203,7 +203,7 @@ export const dynamicRoutes: RouteRecordRaw[] = [
       {
         path: 'community',
         name: 'Community',
-        meta: { title: '🗣️ 社区管理', icon: 'ChatDotRound', permission: 'community:read' },
+        meta: { title: '社区管理', icon: 'eye', permission: 'community:read' },
         redirect: '/community/posts',
         children: [
           {
@@ -239,7 +239,7 @@ export const dynamicRoutes: RouteRecordRaw[] = [
       {
         path: 'ai',
         name: 'AI',
-        meta: { title: '🤖 AI 管理', icon: 'Cpu', permission: 'ai:read' },
+        meta: { title: 'AI 管理', icon: 'tree', permission: 'ai:read' },
         redirect: '/ai/knowledge',
         children: [
           // --- 知识库管理 ---
@@ -372,7 +372,7 @@ export const dynamicRoutes: RouteRecordRaw[] = [
       {
         path: 'system',
         name: 'System',
-        meta: { title: '⚙️ 系统设置', icon: 'Setting', permission: 'system:read' },
+        meta: { title: '系统设置', icon: 'link', permission: 'system:read' },
         redirect: '/system/config',
         children: [
           {
@@ -408,7 +408,7 @@ export const dynamicRoutes: RouteRecordRaw[] = [
       {
         path: 'permission',
         name: 'Permission',
-        meta: { title: '🔐 权限管理', icon: 'Lock', permission: 'permission:read' },
+        meta: { title: '权限管理', icon: 'password', permission: 'permission:read' },
         redirect: '/permission/admin',
         children: [
           {

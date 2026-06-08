@@ -11,7 +11,10 @@ export const usePermissionStore = defineStore('permission', () => {
   function generateRoutes(permissions: string[]): RouteRecordRaw[] {
     const filtered = filterRoutes(dynamicRoutes, permissions)
     routes.value = filtered
-    menuRoutes.value = buildMenuRoutes(filtered)
+    // 布局路由（path: "/"）本身不是菜单项，需要取其 children 作为菜单
+    const layoutRoute = filtered[0]
+    const menuItems = layoutRoute?.children ?? filtered
+    menuRoutes.value = buildMenuRoutes(menuItems)
     routesGenerated.value = true
     return filtered
   }
