@@ -6,7 +6,7 @@
         <img src="@/assets/logo.png" alt="Logo" class="logo-img" />
         <transition name="fade-text">
           <div v-show="!appStore.sidebarCollapsed" class="logo-text">
-            <h1>健身助手</h1>
+            <h1>小程序健身助手</h1>
             <p>管理后台</p>
           </div>
         </transition>

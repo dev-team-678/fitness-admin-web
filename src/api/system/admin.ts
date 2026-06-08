@@ -17,6 +17,6 @@ export const adminApi = {
     return request.post(`/admin-user/${id}/reset-password`)
   },
   loginLogs(params: Record<string, unknown>) {
-    return request.get('/operation-log/list', { params })
+    return request.get('/login-log/list', { params })
   },
 }

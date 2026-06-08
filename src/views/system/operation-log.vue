@@ -38,7 +38,7 @@
 
       <el-table v-loading="loading" :data="tableData" border stripe>
         <el-table-column prop="id" label="ID" width="80" />
-        <el-table-column prop="adminUserId" label="操作人 ID" width="100" />
+        <el-table-column prop="username" label="用户名" width="120" />
         <el-table-column prop="action" label="操作类型" width="100">
           <template #default="{ row }">
             <el-tag :type="typeTagMap[row.action]">{{ row.action }}</el-tag>
@@ -57,7 +57,7 @@
             <span v-else>-</span>
           </template>
         </el-table-column>
-        <el-table-column prop="ipAddress" label="IP" width="140" />
+        <el-table-column prop="ipAddress" label="IP地址" width="140" />
         <el-table-column prop="createdAt" label="操作时间" width="180" />
       </el-table>
 
@@ -83,11 +83,14 @@ import { usePagination } from '@/composables/usePagination'
 import { useTableSearch } from '@/composables/useTableSearch'
 
 const typeTagMap: Record<string, 'primary' | 'success' | 'warning' | 'info' | 'danger' | undefined> = {
-  CREATE: 'success',
-  UPDATE: undefined,
-  DELETE: 'danger',
-  LOGIN: 'warning',
-  EXPORT: 'info',
+  新增: 'success',
+  编辑: undefined,
+  删除: 'danger',
+  登录: 'warning',
+  启用: 'info',
+  禁用: 'danger',
+  重置密码: 'warning',
+  导出: 'info',
 }
 
 const { filters, getSearchParams, resetFilters } = useTableSearch({
