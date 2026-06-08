@@ -222,16 +222,44 @@ async function loadAdjustments() {
 }
 
 async function loadRules() {
-  const res = (await aiPlanApi.getAdjustmentRules()) as unknown as { data: typeof rulesForm }
-  if (res.data) {
-    Object.assign(rulesForm, res.data)
+  const res = (await aiPlanApi.getAdjustmentRules()) as unknown as { data: Array<{ configKey: string; configValue: string }> }
+  if (res.data && Array.isArray(res.data)) {
+    // 将后端返回的配置数组映射到表单
+    const configMap: Record<string, string> = {}
+    for (const item of res.data) {
+      configMap[item.configKey] = item.configValue
+    }
+    // 映射后端config_key到前端表单字段
+    if (configMap['load_increase_completion_threshold']) {
+      rulesForm.threshold = Number(configMap['load_increase_completion_threshold']) || 10
+    }
+    if (configMap['load_increase_pct_max']) {
+      rulesForm.maxSingleAdjustment = Number(configMap['load_increase_pct_max']) || 10
+    }
+    if (configMap['load_decrease_pct_max']) {
+      rulesForm.cooldownDays = Number(configMap['load_decrease_pct_max']) || 3
+    }
+    if (configMap['overfatigue_rpe_threshold']) {
+      rulesForm.fatigueDetection = Number(configMap['overfatigue_rpe_threshold']) > 0
+    }
+    if (configMap['load_increase_streak_weeks']) {
+      rulesForm.autoAdjust = Number(configMap['load_increase_streak_weeks']) > 0
+    }
   }
 }
 
 async function saveRules() {
   rulesSubmitting.value = true
   try {
-    await aiPlanApi.updateAdjustmentRules({ ...rulesForm })
+    // 将前端表单字段映射回后端config_key
+    const configData: Record<string, string | number> = {
+      load_increase_completion_threshold: rulesForm.threshold,
+      load_increase_pct_max: rulesForm.maxSingleAdjustment,
+      load_decrease_pct_max: rulesForm.cooldownDays,
+      overfatigue_rpe_threshold: rulesForm.fatigueDetection ? 10 : 0,
+      load_increase_streak_weeks: rulesForm.autoAdjust ? 2 : 0,
+    }
+    await aiPlanApi.updateAdjustmentRules(configData)
     ElMessage.success('规则已保存')
   } catch {
     ElMessage.error('保存失败')

@@ -27,7 +27,7 @@
           <el-input v-model="filters.userId" placeholder="用户 ID" clearable @clear="handleSearch" />
         </el-form-item>
         <el-form-item label="状态">
-          <el-select v-model="filters.status" placeholder="全部" clearable @change="handleSearch">
+          <el-select v-model="filters.status" placeholder="全部" clearable style="width: 140px" @change="handleSearch">
             <el-option label="草稿" value="draft" />
             <el-option label="待确认" value="pending" />
             <el-option label="已确认" value="confirmed" />
@@ -37,7 +37,7 @@
           </el-select>
         </el-form-item>
         <el-form-item label="训练分化">
-          <el-select v-model="filters.splitType" placeholder="全部" clearable @change="handleSearch">
+          <el-select v-model="filters.splitType" placeholder="全部" clearable style="width: 140px" @change="handleSearch">
             <el-option label="全身" value="full_body" />
             <el-option label="上/下肢" value="upper_lower" />
             <el-option label="推/拉/腿" value="push_pull_legs" />
