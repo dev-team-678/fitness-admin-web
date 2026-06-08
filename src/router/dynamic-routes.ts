@@ -67,7 +67,7 @@ export const dynamicRoutes: RouteRecordRaw[] = [
                 path: 'create',
                 name: 'PlanCreate',
                 component: () => import('@/views/content/plan/edit.vue'),
-                meta: { title: '创建计划', permission: 'plan:create' },
+                meta: { title: '创建计划', hidden: true, permission: 'plan:create' },
               },
               {
                 path: 'edit/:id',

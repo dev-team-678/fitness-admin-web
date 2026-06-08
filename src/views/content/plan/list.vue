@@ -67,6 +67,18 @@
         style="width: 100%"
       >
         <el-table-column prop="name" label="计划名称" min-width="180" show-overflow-tooltip />
+        <el-table-column prop="coverImageUrl" label="封面" width="80" align="center">
+          <template #default="{ row }">
+            <el-image
+              v-if="row.coverImageUrl"
+              :src="row.coverImageUrl"
+              fit="cover"
+              style="width: 50px; height: 50px; border-radius: 4px;"
+              :preview-src-list="[row.coverImageUrl]"
+            />
+            <span v-else>-</span>
+          </template>
+        </el-table-column>
         <el-table-column prop="difficultyLevel" label="难度" width="90" align="center">
           <template #default="{ row }">
             <el-tag :type="difficultyTagType(row.difficultyLevel)" size="small">
@@ -135,8 +147,8 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { onMounted, watch } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { Search, Plus } from '@element-plus/icons-vue'
 import { planApi } from '@/api/content/plan'
@@ -144,6 +156,7 @@ import { usePagination } from '@/composables/usePagination'
 import { useTableSearch } from '@/composables/useTableSearch'
 
 const router = useRouter()
+const route = useRoute()
 
 const { filters, searchText, getSearchParams, resetFilters } = useTableSearch({
   difficultyLevel: '',
@@ -153,6 +166,13 @@ const { filters, searchText, getSearchParams, resetFilters } = useTableSearch({
 
 const { loading, tableData, pagination, loadData, handleCurrentChange, handleSizeChange, resetPage } =
   usePagination((params) => planApi.list({ ...params, ...getSearchParams() }))
+
+// 路由变化时自动刷新（如从编辑页返回）
+watch(() => route.path, () => {
+  if (route.path === '/content/plan/list') {
+    loadData()
+  }
+})
 
 function difficultyLabel(val: string) {
   const map: Record<string, string> = { beginner: '初级', intermediate: '中级', advanced: '高级' }

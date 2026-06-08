@@ -63,7 +63,7 @@
             :http-request="handleCoverUpload"
             accept="image/*"
           >
-            <img v-if="form.coverImage" :src="form.coverImage" class="cover-preview" />
+            <img v-if="form.coverImageUrl" :src="form.coverImageUrl" class="cover-preview" />
             <el-icon v-else class="cover-placeholder"><Plus /></el-icon>
           </el-upload>
         </el-form-item>
@@ -320,7 +320,7 @@ const form = reactive({
   durationWeeks: 4,
   daysPerWeek: 3,
   avgDurationMin: 45,
-  coverImage: '',
+  coverImageUrl: '',
   description: '',
   weeks: 4 as number,
 })
@@ -445,7 +445,7 @@ function confirmExerciseSelection() {
 async function handleCoverUpload(options: UploadRequestOptions) {
   try {
     const url = await upload(options.file, 'plan-covers')
-    form.coverImage = url
+    form.coverImageUrl = url
     ElMessage.success('上传成功')
   } catch {
     ElMessage.error('上传失败')
@@ -513,7 +513,7 @@ async function loadDetail() {
       durationWeeks: data.durationWeeks || 4,
       daysPerWeek: data.daysPerWeek || 3,
       avgDurationMin: data.avgDurationMin || 45,
-      coverImage: data.coverImageUrl || '',
+      coverImageUrl: data.coverImageUrl || '',
       description: data.description || '',
       weeks: data.durationWeeks || 4,
     })
