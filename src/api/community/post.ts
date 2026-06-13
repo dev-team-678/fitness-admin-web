@@ -4,6 +4,9 @@ export const postApi = {
   list(params: Record<string, unknown>) {
     return request.get('/community-post/list', { params })
   },
+  detail(id: number) {
+    return request.get(`/community-post/${id}`)
+  },
   updateStatus(id: number, data: { status: number }) {
     return request.put(`/community-post/${id}/status`, data)
   },

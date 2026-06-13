@@ -8,6 +8,12 @@
             <el-option label="已隐藏" :value="0" />
           </el-select>
         </el-form-item>
+        <el-form-item label="帖子 ID">
+          <el-input v-model="filters.id" placeholder="请输入帖子 ID" clearable style="width: 160px" />
+        </el-form-item>
+        <el-form-item label="用户 ID">
+          <el-input v-model="filters.userId" placeholder="请输入用户 ID" clearable style="width: 160px" />
+        </el-form-item>
         <el-form-item label="日期范围">
           <el-date-picker
             v-model="dateRange"
@@ -25,8 +31,24 @@
       </el-form>
     </el-card>
 
+    <el-card v-if="highlightedPost" shadow="never" class="highlight-card">
+      <div class="highlight-content">
+        <span class="highlight-label">已定位到帖子 #{{ highlightedPost.id }}</span>
+        <span class="highlight-text" v-if="highlightedPost.content">{{ highlightedPost.content }}</span>
+        <el-button type="danger" link size="small" @click="clearHighlight">清除定位</el-button>
+      </div>
+    </el-card>
+
     <el-card shadow="never">
-      <el-table :data="tableData" v-loading="loading" stripe border>
+      <el-table
+        :data="tableData"
+        v-loading="loading"
+        stripe
+        border
+        :row-class-name="rowClassName"
+        highlight-current-row
+      >
+        <el-table-column prop="id" label="ID" width="80" />
         <el-table-column prop="content" label="内容" min-width="220" show-overflow-tooltip />
         <el-table-column prop="userId" label="用户 ID" width="100" />
         <el-table-column prop="images" label="图片" width="100">
@@ -51,6 +73,7 @@
             </el-tag>
           </template>
         </el-table-column>
+        <el-table-column prop="id" label="帖子 ID" width="90" />
         <el-table-column prop="createdAt" label="发布时间" width="160" />
         <el-table-column label="操作" width="160" fixed="right">
           <template #default="{ row }">
@@ -100,7 +123,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onActivated, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { postApi } from '@/api/community/post'
 import { usePagination } from '@/composables/usePagination'
@@ -116,11 +140,18 @@ const statusTagType: Record<number, 'primary' | 'success' | 'warning' | 'info' |
   1: 'success',
 }
 
+const route = useRoute()
+const router = useRouter()
+const highlightedPostId = ref<number | null>(null)
+const highlightedPost = ref<Record<string, unknown> | null>(null)
+
 const { loading, tableData, pagination, loadData, handleCurrentChange, handleSizeChange, resetPage } =
   usePagination(postApi.list as (params: Record<string, unknown>) => Promise<unknown>)
 
 const { filters, getSearchParams, resetFilters } = useTableSearch({
   status: '' as number | string,
+  id: '',
+  userId: '',
 })
 
 const dateRange = ref<[string, string] | null>(null)
@@ -142,52 +173,57 @@ function handleSearch() {
 function handleReset() {
   resetFilters()
   dateRange.value = null
+  highlightedPostId.value = null
+  highlightedPost.value = null
+  if (route.query.postId) {
+    router.replace({ path: route.path, query: {} })
+  }
   resetPage()
   loadData()
 }
 
-async function handleApprove(row: Record<string, unknown>) {
-  try {
-    await postApi.updateStatus(row.id as number, { status: 1 })
-    ElMessage.success('已恢复')
-    loadData(buildParams())
-  } catch {
-    // handled by interceptor
+function rowClassName({ row }: { row: Record<string, unknown> }) {
+  return highlightedPostId.value && row.id === highlightedPostId.value ? 'highlighted-row' : ''
+}
+
+function clearHighlight() {
+  highlightedPostId.value = null
+  highlightedPost.value = null
+  if (route.query.postId) {
+    router.replace({ path: route.path, query: {} })
   }
 }
 
-async function handleHide(row: Record<string, unknown>) {
+async function applyHighlight() {
+  const queryPostId = route.query.postId
+  if (!queryPostId) return
+  const postId = Number(queryPostId)
+  if (!postId || Number.isNaN(postId)) return
+  highlightedPostId.value = postId
+  filters.id = String(postId)
   try {
-    await ElMessageBox.confirm('确定要隐藏该帖子吗？', '提示', {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-      type: 'warning',
-    })
-    await postApi.updateStatus(row.id as number, { status: 0 })
-    ElMessage.success('已隐藏')
-    loadData(buildParams())
+    const res = (await postApi.detail(postId)) as { data?: Record<string, unknown> }
+    if (res?.data) {
+      highlightedPost.value = res.data
+    }
   } catch {
-    // cancelled or error
+    highlightedPost.value = { id: postId, content: '（帖子已被删除或不可见）' }
   }
+  loadData(buildParams())
 }
 
-async function handleDelete(row: Record<string, unknown>) {
-  try {
-    await ElMessageBox.confirm('确定要删除该帖子吗？此操作不可恢复。', '警告', {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-      type: 'warning',
-    })
-    await postApi.delete(row.id as number)
-    ElMessage.success('删除成功')
-    loadData(buildParams())
-  } catch {
-    // cancelled or error
-  }
-}
+watch(() => route.query.postId, () => {
+  applyHighlight()
+})
 
 onMounted(() => {
-  loadData()
+  applyHighlight()
+})
+
+onActivated(() => {
+  if (route.query.postId) {
+    applyHighlight()
+  }
 })
 </script>
 
@@ -200,9 +236,42 @@ onMounted(() => {
   margin-bottom: 16px;
 }
 
+.highlight-card {
+  margin-bottom: 16px;
+  background: #fdf6ec;
+  border: 1px solid #faecd8;
+
+  .highlight-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .highlight-label {
+    font-weight: 600;
+    color: #e6a23c;
+  }
+
+  .highlight-text {
+    flex: 1;
+    color: #606266;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
 .pagination {
   margin-top: 16px;
   display: flex;
   justify-content: flex-end;
+}
+
+:deep(.highlighted-row) {
+  background: #fdf6ec !important;
+
+  td {
+    background: #fdf6ec !important;
+  }
 }
 </style>

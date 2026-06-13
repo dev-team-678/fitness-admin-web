@@ -32,7 +32,7 @@
         <el-table-column prop="userId" label="用户 ID" width="100" />
         <el-table-column prop="postId" label="所属帖子" width="100">
           <template #default="{ row }">
-            <el-button type="primary" link size="small">#{{ row.postId }}</el-button>
+            <el-button type="primary" link size="small" @click="handleViewPost(row)">#{{ row.postId }}</el-button>
           </template>
         </el-table-column>
         <el-table-column prop="createdAt" label="评论时间" width="160" />
@@ -60,10 +60,13 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { commentApi } from '@/api/community/comment'
 import { usePagination } from '@/composables/usePagination'
 import { useTableSearch } from '@/composables/useTableSearch'
+
+const router = useRouter()
 
 const { loading, tableData, pagination, loadData, handleCurrentChange, handleSizeChange, resetPage } =
   usePagination(commentApi.list as (params: Record<string, unknown>) => Promise<unknown>)
@@ -94,6 +97,10 @@ function handleReset() {
   dateRange.value = null
   resetPage()
   loadData()
+}
+
+function handleViewPost(row: Record<string, unknown>) {
+  router.push({ path: '/community/posts', query: { postId: String(row.postId) } })
 }
 
 async function handleDelete(row: Record<string, unknown>) {
