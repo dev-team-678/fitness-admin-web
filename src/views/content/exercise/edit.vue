@@ -377,8 +377,8 @@ async function loadOptions() {
       categoryApi.list(),
       bodyPartApi.list(),
     ])
-    categoryOptions.value = (catRes as any).data || []
-    bodyPartOptions.value = (bpRes as any).data || []
+    categoryOptions.value = (Array.isArray(catRes) ? catRes : []) as never[]
+    bodyPartOptions.value = (Array.isArray(bpRes) ? bpRes : []) as never[]
   } catch {
     // handled by interceptor
   }
@@ -387,8 +387,8 @@ async function loadOptions() {
 async function loadDetail() {
   if (!isEdit.value) return
   try {
-    const res = await exerciseApi.detail(safeId.value) as any
-    const data = res.data
+    const res = await exerciseApi.detail(safeId.value)
+    const data = (res ?? {}) as { [k: string]: unknown }
 
     // Parse JSON strings to arrays
     let instructions = ['']

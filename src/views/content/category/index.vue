@@ -157,7 +157,7 @@ async function handleSubmit() {
       await categoryApi.update(editingId.value, {
         name: dialogForm.name,
         sortOrder: dialogForm.sortOrder,
-      } as any)
+      })
       ElMessage.success('编辑成功')
     } else {
       await categoryApi.create({
@@ -188,8 +188,8 @@ async function handleDelete(row: CategoryItem) {
 async function loadData() {
   loading.value = true
   try {
-    const res = await categoryApi.list() as any
-    rawData.value = res.data || []
+    const res = await categoryApi.list()
+    rawData.value = (Array.isArray(res) ? res : []) as never[]
   } catch {
     // handled by interceptor
   } finally {

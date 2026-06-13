@@ -111,13 +111,13 @@ async function handleSubmit() {
       await bodyPartApi.update(editingId.value, {
         name: dialogForm.name,
         sortOrder: dialogForm.sortOrder,
-      } as any)
+      })
       ElMessage.success('编辑成功')
     } else {
       await bodyPartApi.create({
         name: dialogForm.name,
         sortOrder: dialogForm.sortOrder,
-      } as any)
+      })
       ElMessage.success('新增成功')
     }
     dialogVisible.value = false
@@ -142,8 +142,8 @@ async function handleDelete(row: BodyPartItem) {
 async function loadData() {
   loading.value = true
   try {
-    const res = await bodyPartApi.list() as any
-    tableData.value = res.data || []
+    const res = await bodyPartApi.list()
+    tableData.value = (Array.isArray(res) ? res : []) as never[]
   } catch {
     // handled by interceptor
   } finally {

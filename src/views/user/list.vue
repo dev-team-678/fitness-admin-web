@@ -120,8 +120,8 @@
         <el-table-column prop="createdAt" label="注册时间" width="170" align="center" sortable />
         <el-table-column label="状态" width="100" align="center">
           <template #default="{ row }">
-            <el-tag :type="row.status === 1 ? 'success' : 'danger'" effect="light">
-              {{ row.status === 1 ? '正常' : '已禁用' }}
+            <el-tag :type="row.statusCode === 1 ? 'success' : 'danger'" effect="light">
+              {{ row.statusCode === 1 ? '正常' : '已禁用' }}
             </el-tag>
           </template>
         </el-table-column>
@@ -131,10 +131,10 @@
             <el-button link type="primary" @click="handleEdit(row)">编辑</el-button>
             <el-button
               link
-              :type="row.status === 1 ? 'danger' : 'success'"
+              :type="row.statusCode === 1 ? 'danger' : 'success'"
               @click="handleToggleStatus(row)"
             >
-              {{ row.status === 1 ? '禁用' : '启用' }}
+              {{ row.statusCode === 1 ? '禁用' : '启用' }}
             </el-button>
           </template>
         </el-table-column>
@@ -385,7 +385,8 @@ async function handleEditSubmit() {
 async function loadTags() {
   try {
     const res = await userApi.tags()
-    allTags.value = (res as any).data || res || []
+    const list = Array.isArray(res) ? res : (res?.list ?? [])
+    allTags.value = list
   } catch {
     // ignore
   }
@@ -416,7 +417,7 @@ function goDetail(id: number) {
 }
 
 async function handleToggleStatus(row: any) {
-  const newStatus = row.status === 1 ? 2 : 1
+  const newStatus = row.statusCode === 1 ? 2 : 1
   const actionText = newStatus === 2 ? '禁用' : '启用'
   try {
     await ElMessageBox.confirm(`确定要${actionText}用户「${row.nickname || row.id}」吗？`, '确认操作', {

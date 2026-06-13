@@ -276,8 +276,8 @@ async function handleDelete(row: any) {
 
 async function loadBodyParts() {
   try {
-    const res = await bodyPartApi.list() as any
-    bodyPartOptions.value = res.data || []
+    const res = await bodyPartApi.list()
+    bodyPartOptions.value = (Array.isArray(res) ? res : []) as never[]
   } catch {
     // ignore
   }

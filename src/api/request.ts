@@ -1,8 +1,9 @@
-import axios from 'axios'
+import axios, { type AxiosResponse } from 'axios'
 import { ElMessage } from 'element-plus'
 import { getToken, removeToken } from '@/utils/auth'
 import router from '@/router'
 import JSONBig from 'json-bigint'
+import type { ApiResponse } from '@/types/api'
 
 const baseURL = import.meta.env.VITE_APP_BASE_API || '/api/v1'
 
@@ -36,13 +37,14 @@ service.interceptors.request.use(
 
 // Response interceptor: unified error handling
 service.interceptors.response.use(
-  (response) => {
-    const { code, message, data } = response.data
+  (response: AxiosResponse<ApiResponse<unknown>>) => {
+    const { code, message } = response.data
     if (code !== 0 && code !== 200) {
       ElMessage.error(message || '请求失败')
       return Promise.reject(new Error(message))
     }
-    return response.data as any
+    // 返回完整的 ApiResponse，调用方通过 res.data 获取业务数据
+    return response.data
   },
   (error) => {
     if (error.response?.status === 401) {

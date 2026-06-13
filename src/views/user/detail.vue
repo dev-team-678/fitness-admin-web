@@ -20,11 +20,11 @@
             <el-icon :size="36"><User /></el-icon>
           </el-avatar>
           <el-tag
-            :type="user.status === 1 ? 'success' : 'danger'"
+            :type="user.statusCode === 1 ? 'success' : 'danger'"
             effect="light"
             class="status-tag"
           >
-            {{ user.status === 1 ? '正常' : '已禁用' }}
+            {{ user.statusCode === 1 ? '正常' : '已禁用' }}
           </el-tag>
         </div>
         <el-descriptions :column="3" border>
@@ -321,6 +321,13 @@ function formatArray(value: any): string[] {
 }
 
 // Load data
+function unwrap<T = unknown>(res: unknown): T {
+  if (res && typeof res === 'object' && 'data' in (res as Record<string, unknown>)) {
+    return (res as { data: T }).data
+  }
+  return res as T
+}
+
 async function loadUserDetail() {
   if (userId.value <= 0) {
     ElMessage.error('用户ID无效')
@@ -329,10 +336,11 @@ async function loadUserDetail() {
   }
   pageLoading.value = true
   try {
-    const res = (await userApi.detail(userId.value)) as any
-    Object.assign(user, res.data || {})
-  } catch (err: any) {
-    ElMessage.error(err.message || '加载用户信息失败')
+    const res = await userApi.detail(userId.value)
+    Object.assign(user, unwrap(res) || {})
+  } catch (err) {
+    const message = err instanceof Error ? err.message : '加载用户信息失败'
+    ElMessage.error(message)
   } finally {
     pageLoading.value = false
   }
@@ -345,8 +353,9 @@ async function loadStats() {
 async function loadAchievements() {
   if (userId.value <= 0) return
   try {
-    const res = (await userApi.getAchievements(userId.value)) as any
-    achievements.value = res.data || []
+    const res = await userApi.getAchievements(userId.value)
+    const data = unwrap<unknown[]>(res)
+    achievements.value = Array.isArray(data) ? data : []
   } catch {
     // ignore
   }
@@ -359,8 +368,9 @@ async function loadWorkouts(reset = false) {
     workouts.value = []
   }
   try {
-    const res = (await userApi.getWorkouts(userId.value, { page: workoutPage.value, pageSize: 10 })) as any
-    const list = res.data?.list || res.data || []
+    const res = await userApi.getWorkouts(userId.value, { page: workoutPage.value, pageSize: 10 })
+    const data = unwrap<{ list?: unknown[] } | unknown[]>(res)
+    const list = (data as { list?: unknown[] })?.list ?? (Array.isArray(data) ? data : [])
     if (reset) {
       workouts.value = list
     } else {
@@ -379,8 +389,8 @@ function loadMoreWorkouts() {
 async function loadAiProfile() {
   if (userId.value <= 0) return
   try {
-    const res = (await userApi.getAiProfile(userId.value)) as any
-    aiProfile.value = res.data || null
+    const res = await userApi.getAiProfile(userId.value)
+    aiProfile.value = unwrap<Record<string, any> | null>(res) ?? null
   } catch {
     // ignore
   }
@@ -389,8 +399,10 @@ async function loadAiProfile() {
 async function loadAiChats() {
   if (userId.value <= 0) return
   try {
-    const res = (await userApi.getAiChats(userId.value, { page: 1, pageSize: 5 })) as any
-    aiChats.value = res.data?.list || res.data || []
+    const res = await userApi.getAiChats(userId.value, { page: 1, pageSize: 5 })
+    const data = unwrap<{ list?: unknown[] } | unknown[]>(res)
+    const list = (data as { list?: unknown[] })?.list ?? (Array.isArray(data) ? data : [])
+    aiChats.value = list
   } catch {
     // ignore
   }

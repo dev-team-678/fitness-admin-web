@@ -229,8 +229,8 @@ async function searchUsers(query: string) {
   userSearchLoading.value = true
   try {
     const res = await userApi.list({ pageNum: 1, pageSize: 20, keyword: query })
-    const data = (res as any).data
-    userOptions.value = data?.list || data || []
+    const data = res as { list?: unknown[] }
+    userOptions.value = (data?.list ?? (Array.isArray(res) ? res : [])) as never[]
   } catch {
     userOptions.value = []
   } finally {

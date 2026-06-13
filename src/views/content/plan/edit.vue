@@ -418,8 +418,9 @@ async function openExerciseSelector() {
   selectedExercises.value = []
   if (!exerciseLibrary.value.length) {
     try {
-      const res = await exerciseApi.list({ pageNum: 1, pageSize: 500 }) as any
-      exerciseLibrary.value = res.data?.list || []
+      const res = await exerciseApi.list({ pageNum: 1, pageSize: 500 })
+      const payload = (res as { data?: { list?: unknown[] } })?.data ?? (res as { list?: unknown[] })
+      exerciseLibrary.value = (payload?.list ?? []) as never[]
     } catch {
       // handled by interceptor
     }
@@ -508,8 +509,8 @@ function goBack() {
 async function loadDetail() {
   if (!isEdit.value) return
   try {
-    const res = await planApi.detail(safeId.value) as any
-    const data = res.data
+    const res = await planApi.detail(safeId.value)
+    const data = res ?? {}
     Object.assign(form, {
       name: data.name,
       fitnessLevel: data.difficultyLevel || 'intermediate',
