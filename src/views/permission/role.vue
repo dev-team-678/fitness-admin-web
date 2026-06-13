@@ -27,10 +27,13 @@
     </el-card>
 
     <el-dialog
-      v-model="dialogVisible"
+      :model-value="dialogVisible"
       :title="isEdit ? '编辑角色' : '新增角色'"
       width="600px"
       destroy-on-close
+      :before-close="() => (dialogVisible = false)"
+      @update:model-value="(v: boolean) => (dialogVisible = v)"
+      @open="onDialogOpen"
     >
       <el-form ref="formRef" :model="editForm" :rules="rules" label-width="100px">
         <el-form-item label="角色名称" prop="name">
@@ -43,13 +46,21 @@
           <el-input v-model="editForm.description" type="textarea" :rows="2" placeholder="请输入角色描述" />
         </el-form-item>
         <el-form-item label="权限配置">
+          <div class="permission-toolbar">
+            <el-checkbox v-model="checkAll" @change="handleCheckAllChange">全选</el-checkbox>
+            <el-button link type="primary" @click="handleExpandAll(false)">收起</el-button>
+            <el-button link type="primary" @click="handleExpandAll(true)">展开</el-button>
+          </div>
           <el-tree
+            v-if="dialogVisible"
             ref="treeRef"
             :data="permissionTree"
             :props="{ label: 'label', children: 'children' }"
             show-checkbox
             node-key="id"
-            :default-checked-keys="editForm.permissions"
+            :default-checked-keys="defaultChecked"
+            :default-expand-all="true"
+            @check="onTreeCheck"
             class="permission-tree"
           />
         </el-form-item>
@@ -63,7 +74,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, nextTick, computed } from 'vue'
 import { ElMessage } from 'element-plus'
 import type { FormInstance, ElTree } from 'element-plus'
 import { roleApi } from '@/api/system/role'
@@ -97,6 +108,17 @@ const editForm = reactive({
   description: '',
   permissions: [] as string[],
 })
+
+// el-tree 的 default-checked-keys 只在初始化时生效,弹窗 destroy-on-close 重建时需要缓存上一次的值
+const defaultChecked = ref<string[]>([])
+
+// 全选状态:仅在叶子节点(权限项)层面判定
+const checkAll = ref(false)
+
+// 全部叶子节点 id,用于全选/反选
+const leafNodeIds = computed<string[]>(() =>
+  permissionTree.flatMap((mod) => (mod.children ?? []).map((c) => c.id)),
+)
 
 const rules = {
   name: [{ required: true, message: '请输入角色名称', trigger: 'blur' }],
@@ -137,8 +159,7 @@ async function loadData() {
   loading.value = true
   try {
     const res = await roleApi.list()
-    const responseData = (res as { data: { list: RoleItem[] } }).data
-    tableData.value = responseData?.list || []
+    tableData.value = res.data?.list || []
   } catch {
     // Error handled by interceptor
   } finally {
@@ -153,17 +174,86 @@ function handleCreate() {
   editForm.code = ''
   editForm.description = ''
   editForm.permissions = []
+  defaultChecked.value = []
+  checkAll.value = false
   dialogVisible.value = true
 }
 
-function handleEdit(row: RoleItem) {
+async function handleEdit(row: RoleItem) {
   isEdit.value = true
   editId.value = row.id
   editForm.name = row.name
   editForm.code = row.code || ''
   editForm.description = row.description || ''
-  editForm.permissions = row.permissions || []
+  // 先用列表里的权限,避免 await 期间 defaultChecked 是 null
+  const initialPerms = Array.isArray(row.permissions) ? row.permissions : []
+  editForm.permissions = [...initialPerms]
+  defaultChecked.value = [...initialPerms]
   dialogVisible.value = true
+  // 拉取最新权限,避免列表接口未返回该字段时编辑为空
+  try {
+    const res = await roleApi.detail(row.id)
+    const data = res.data
+    if (data) {
+      editForm.name = data.name ?? editForm.name
+      editForm.code = data.code ?? editForm.code
+      editForm.description = data.description ?? editForm.description
+      let nextPerms: string[] = []
+      if (typeof data.permissions === 'string' && data.permissions.trim()) {
+        nextPerms = data.permissions.split(',').map((s) => s.trim()).filter(Boolean)
+      } else if (Array.isArray((data as { permissions?: unknown }).permissions)) {
+        nextPerms = (data as unknown as { permissions: string[] }).permissions
+      }
+      editForm.permissions = nextPerms
+      defaultChecked.value = nextPerms
+      // 详情回填后,按当前权限回算全选框状态
+      checkAll.value = nextPerms.length > 0 && leafNodeIds.value.length > 0
+        && leafNodeIds.value.every((id) => nextPerms.includes(id))
+    }
+  } catch {
+    // 详情接口失败时回退到列表里的数据
+  }
+}
+
+// 弹窗打开时:如果是编辑,等待树渲染完再回填勾选状态
+async function onDialogOpen() {
+  await nextTick()
+  if (!isEdit.value) return
+  // 强制刷新一次勾选,应对 destroy-on-close 后的重建
+  if (defaultChecked.value.length) {
+    treeRef.value?.setCheckedKeys(defaultChecked.value, false)
+  }
+  syncCheckAllState()
+}
+
+// 全选切换
+function handleCheckAllChange(checked: boolean) {
+  if (!treeRef.value) return
+  if (checked) {
+    treeRef.value.setCheckedKeys(leafNodeIds.value, false)
+  } else {
+    treeRef.value.setCheckedKeys([], false)
+  }
+}
+
+// 树节点勾选变化时同步全选框状态
+function onTreeCheck() {
+  const checked = treeRef.value?.getCheckedKeys(false) as string[] | undefined
+  const checkedSet = new Set(checked ?? [])
+  checkAll.value = leafNodeIds.value.length > 0 && leafNodeIds.value.every((id) => checkedSet.has(id))
+}
+
+// 同步全选框状态(打开弹窗/编辑回填后调用)
+function syncCheckAllState() {
+  onTreeCheck()
+}
+
+// 展开/收起整棵树
+function handleExpandAll(expand: boolean) {
+  const nodes = treeRef.value?.store?.nodesMap ?? {}
+  Object.values<{ expanded: boolean }>(nodes).forEach((n) => {
+    n.expanded = expand
+  })
 }
 
 async function handleDelete(id: number) {
@@ -191,12 +281,12 @@ async function handleSubmit() {
       code: editForm.code,
       description: editForm.description,
       permissions: allPermissions,
-    }
+    } as unknown as Record<string, unknown>
     if (isEdit.value) {
-      await roleApi.update(editId.value, payload)
+      await roleApi.update(editId.value, payload as never)
       ElMessage.success('更新成功')
     } else {
-      await roleApi.create(payload)
+      await roleApi.create(payload as never)
       ElMessage.success('创建成功')
     }
     dialogVisible.value = false
@@ -222,6 +312,13 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: space-between;
+}
+
+.permission-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 8px;
 }
 
 .permission-tree {

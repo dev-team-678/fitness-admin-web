@@ -143,7 +143,7 @@ async function loadData() {
   loading.value = true
   try {
     const res = await bodyPartApi.list()
-    tableData.value = (Array.isArray(res) ? res : []) as never[]
+    tableData.value = res.data || []
   } catch {
     // handled by interceptor
   } finally {

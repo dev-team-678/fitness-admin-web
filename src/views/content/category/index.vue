@@ -189,7 +189,7 @@ async function loadData() {
   loading.value = true
   try {
     const res = await categoryApi.list()
-    rawData.value = (Array.isArray(res) ? res : []) as never[]
+    rawData.value = res.data || []
   } catch {
     // handled by interceptor
   } finally {
