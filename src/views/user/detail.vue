@@ -383,11 +383,11 @@ async function loadAiChats() {
 }
 
 function viewChat(chatId: number) {
-  router.push(`/ai/chat/${chatId}`)
+  router.push(`/ai/chat-monitor/detail/${chatId}`)
 }
 
 function viewAllChats() {
-  router.push({ path: '/ai/chats', query: { user_id: String(userId.value) } })
+  router.push({ path: '/ai/chat-monitor/list', query: { user_id: String(userId.value) } })
 }
 
 // Init

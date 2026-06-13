@@ -29,6 +29,15 @@
 
     <el-card shadow="never" class="filter-card">
       <el-form :inline="true" :model="filters" @submit.prevent="handleSearch">
+        <el-form-item label="用户ID">
+          <el-input
+            v-model="filterUserId"
+            placeholder="输入用户ID筛选"
+            clearable
+            style="width: 160px"
+            @clear="handleSearch"
+          />
+        </el-form-item>
         <el-form-item label="日期范围">
           <el-date-picker
             v-model="filters.dateRange"
@@ -96,12 +105,15 @@
 
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { chatMonitorApi } from '@/api/ai/chat-monitor'
 import { usePagination } from '@/composables/usePagination'
 import { useTableSearch } from '@/composables/useTableSearch'
 
+const route = useRoute()
 const router = useRouter()
+
+const filterUserId = ref<string>(route.query.user_id as string || '')
 
 const stats = reactive({
   totalSessions: 0,
@@ -126,11 +138,15 @@ function handleSearch() {
     params.endDate = filters.dateRange[1]
   }
   delete params.dateRange
+  if (filterUserId.value) {
+    params.userId = filterUserId.value
+  }
   loadData(params)
 }
 
 function handleReset() {
   resetFilters()
+  filterUserId.value = ''
   handleSearch()
 }
 
@@ -146,7 +162,11 @@ async function loadStats() {
 }
 
 onMounted(() => {
-  loadData()
+  if (filterUserId.value) {
+    handleSearch()
+  } else {
+    loadData()
+  }
   loadStats()
 })
 </script>
