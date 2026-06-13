@@ -198,9 +198,7 @@ async function handleConvert(row: { id: number }) {
 }
 
 async function loadStats() {
-  const res = (await aiPlanApi.stats()) as unknown as {
-    data: { total: number; converted: number; conversionRate: number }
-  }
+  const res = await aiPlanApi.stats()
   Object.assign(stats, res.data)
 }
 

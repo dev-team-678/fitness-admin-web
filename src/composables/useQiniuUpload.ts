@@ -11,10 +11,11 @@ export function useQiniuUpload() {
     progress.value = 0
     try {
       // 1. 从后端获取七牛云上传凭证
-      const res = await request.get('/upload/media', { params: { filename: file.name, dir } })
-      const { uploadToken, key, uploadDomain, fileUrl } = (res as {
-        data: { uploadToken: string; key: string; uploadDomain: string; fileUrl: string }
-      }).data
+      const res = await request.get<{ uploadToken: string; key: string; uploadDomain: string; fileUrl: string }>(
+        '/upload/media',
+        { params: { filename: file.name, dir } }
+      )
+      const { uploadToken, key, uploadDomain, fileUrl } = res.data
 
       // 2. 构建 FormData 直传七牛云
       const formData = new FormData()

@@ -139,15 +139,13 @@ function removeTag(tag: string) {
 }
 
 async function loadCategories() {
-  const res = (await knowledgeApi.getCategories()) as unknown as { data: Category[] }
+  const res = await knowledgeApi.getCategories()
   categories.value = res.data || []
 }
 
 async function loadDetail() {
   if (!route.params.id) return
-  const res = (await knowledgeApi.detail(safeId.value)) as unknown as {
-    data: { category: string; title: string; content: string; tags: string[] | string; source: string; status: number }
-  }
+  const res = await knowledgeApi.detail(safeId.value)
   const d = res.data
   form.category = d.category
   form.title = d.title

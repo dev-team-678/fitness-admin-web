@@ -209,20 +209,18 @@ function statusText(status: string) {
 }
 
 async function loadPlan() {
-  const res = (await aiPlanApi.detail(planId.value)) as unknown as {
-    data: typeof plan & { workoutDays?: DayPlan[] }
-  }
+  const res = await aiPlanApi.detail(planId.value)
   Object.assign(plan, res.data)
   weeklyPlan.value = res.data.workoutDays || []
 }
 
 async function loadAdjustments() {
-  const res = (await aiPlanApi.adjustments(planId.value)) as unknown as { data: Adjustment[] }
+  const res = await aiPlanApi.adjustments(planId.value)
   adjustments.value = res.data || []
 }
 
 async function loadRules() {
-  const res = (await aiPlanApi.getAdjustmentRules()) as unknown as { data: Array<{ configKey: string; configValue: string }> }
+  const res = await aiPlanApi.getAdjustmentRules()
   if (res.data && Array.isArray(res.data)) {
     // 将后端返回的配置数组映射到表单
     const configMap: Record<string, string> = {}

@@ -130,7 +130,7 @@ const rules = {
 
 async function loadDetail() {
   if (!route.params.id) return
-  const res = (await safetyApi.ruleDetail(safeId.value)) as unknown as { data: typeof form }
+  const res = await safetyApi.ruleDetail(safeId.value)
   Object.assign(form, res.data)
 }
 

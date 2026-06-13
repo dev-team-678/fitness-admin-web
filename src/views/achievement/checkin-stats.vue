@@ -16,7 +16,7 @@
       </el-col>
       <el-col :span="8">
         <el-card shadow="hover" class="summary-card">
-          <div class="summary-value">{{ (statsData.dailyStats as unknown[])?.length ?? '--' }}</div>
+          <div class="summary-value">{{ dailyStatsLength }}</div>
           <div class="summary-label">数据点数</div>
         </el-card>
       </el-col>
@@ -61,7 +61,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, onBeforeUnmount, nextTick } from 'vue'
+import { ref, reactive, computed, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import * as echarts from 'echarts'
 import { checkinApi } from '@/api/achievement/checkin'
 
@@ -69,6 +69,11 @@ const statsData = reactive<Record<string, unknown>>({
   todayCount: 0,
   days: 0,
   dailyStats: [],
+})
+
+const dailyStatsLength = computed(() => {
+  const list = statsData.dailyStats
+  return Array.isArray(list) ? list.length : '--'
 })
 
 const trendType = ref('daily')
@@ -80,8 +85,7 @@ const leaderboardLoading = ref(false)
 async function loadStats() {
   try {
     const res = await checkinApi.stats()
-    const data = (res as { data: Record<string, number> }).data
-    Object.assign(statsData, data)
+    Object.assign(statsData, res.data)
   } catch {
     // handled by interceptor
   }
@@ -90,10 +94,10 @@ async function loadStats() {
 async function loadTrend() {
   try {
     const res = await checkinApi.stats({ type: trendType.value })
-    const data = (res as { data: { dailyStats: { checkinDate: string; count: number }[] } }).data
+    const data = res.data
     if (!trendChart) return
-    const dates = (data.dailyStats || []).map((d) => d.checkinDate)
-    const counts = (data.dailyStats || []).map((d) => d.count)
+    const dates = (data.dailyStats || []).map((d: { checkinDate: string }) => d.checkinDate)
+    const counts = (data.dailyStats || []).map((d: { count: number }) => d.count)
     trendChart.setOption({
       tooltip: { trigger: 'axis' },
       legend: { data: ['签到人数'] },
@@ -118,7 +122,7 @@ async function loadLeaderboard() {
   leaderboardLoading.value = true
   try {
     const res = await checkinApi.leaderboard()
-    leaderboard.value = (res as { data: Record<string, unknown>[] }).data || []
+    leaderboard.value = (res.data as Record<string, unknown>[]) || []
   } catch {
     // handled by interceptor
   } finally {

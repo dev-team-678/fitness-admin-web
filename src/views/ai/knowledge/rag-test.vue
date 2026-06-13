@@ -83,9 +83,7 @@ async function handleSearch() {
   searching.value = true
   searched.value = true
   try {
-    const res = (await knowledgeApi.ragTest({ query: q, topK: 5 })) as unknown as {
-      data: { results: RagResult[]; qualityScore: number }
-    }
+    const res = await knowledgeApi.ragTest({ query: q, topK: 5 })
     results.value = res.data.results || []
     qualityScore.value = res.data.qualityScore ?? null
   } catch {

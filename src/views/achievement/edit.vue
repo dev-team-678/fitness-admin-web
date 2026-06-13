@@ -153,9 +153,7 @@ async function handleIconUpload(options: UploadRequestOptions) {
 async function loadDetail() {
   if (!route.params.id) return
   try {
-    const res = (await achievementApi.detail(safeId.value)) as unknown as {
-      data: Record<string, unknown>
-    }
+    const res = await achievementApi.detail(safeId.value)
     const item = res.data
     if (item) {
       Object.assign(form, {

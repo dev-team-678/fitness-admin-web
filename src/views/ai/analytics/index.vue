@@ -229,15 +229,15 @@ async function loadData() {
     aiAnalyticsApi.knowledgeUsage(),
   ])
 
-  const o = (overviewRes as unknown as { data: typeof overview }).data
+  const o = overviewRes.data
   Object.assign(overview, o)
 
-  hotQuestions.value = ((hotQuestionsRes as unknown as { data: HotQuestion[] }).data || []).slice(0, 10)
-  knowledgeRecall.value = ((knowledgeRes as unknown as { data: KnowledgeRecallItem[] }).data || []).slice(0, 10)
+  hotQuestions.value = (hotQuestionsRes.data || []).slice(0, 10)
+  knowledgeRecall.value = (knowledgeRes.data || []).slice(0, 10)
 
   await nextTick()
-  initChatTrendChart((chatTrendRes as unknown as { data: TrendPoint[] }).data || [])
-  initSatisfactionChart((satisfactionRes as unknown as { data: TrendPoint[] }).data || [])
+  initChatTrendChart(chatTrendRes.data || [])
+  initSatisfactionChart(satisfactionRes.data || [])
 }
 
 onMounted(() => {

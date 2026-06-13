@@ -200,7 +200,7 @@ async function onFileSelected(e: Event) {
 }
 
 async function loadCategories() {
-  const res = (await knowledgeApi.getCategories()) as unknown as { data: Category[] }
+  const res = await knowledgeApi.getCategories()
   categories.value = res.data || []
 }
 

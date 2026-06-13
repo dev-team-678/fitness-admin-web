@@ -156,14 +156,14 @@ const correctionSubmitting = ref(false)
 const currentCorrectionMsg = ref<Message | null>(null)
 
 async function loadSession() {
-  const res = (await chatMonitorApi.sessionDetail(sessionId.value)) as unknown as { data: typeof session }
+  const res = await chatMonitorApi.sessionDetail(sessionId.value)
   Object.assign(session, res.data)
 }
 
 async function loadMessages() {
   messagesLoading.value = true
   try {
-    const res = (await chatMonitorApi.messages(sessionId.value)) as unknown as { data: { list: Message[] } }
+    const res = await chatMonitorApi.messages(sessionId.value)
     messages.value = res.data?.list || []
   } finally {
     messagesLoading.value = false

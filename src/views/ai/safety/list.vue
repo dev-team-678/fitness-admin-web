@@ -168,9 +168,7 @@ async function handleTest() {
   }
   testLoading.value = true
   try {
-    const res = (await safetyApi.testRule({ text: testText.value })) as unknown as {
-      data: { matched: boolean; ruleName?: string; action?: string }
-    }
+    const res = await safetyApi.testRule({ text: testText.value })
     testResult.value = res.data
   } catch {
     ElMessage.error('测试失败')

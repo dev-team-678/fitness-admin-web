@@ -114,7 +114,7 @@ function handleReset() {
 async function handleExport() {
   try {
     const res = await workoutAnalyticsApi.exportRecords(buildParams())
-    const blob = new Blob([(res as unknown as Blob)], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+    const blob = new Blob([res.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
     const url = URL.createObjectURL(blob)
     const link = document.createElement('a')
     link.href = url

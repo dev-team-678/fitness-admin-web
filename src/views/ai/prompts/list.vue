@@ -106,7 +106,7 @@ async function handleViewVersions(row: { id: number; version: number }) {
   selectedPromptId.value = row.id
   currentVersion.value = row.version
   versionsDialogVisible.value = true
-  const res = (await promptApi.versions(row.id)) as unknown as { data: Version[] }
+  const res = await promptApi.versions(row.id)
   versions.value = res.data || []
 }
 

@@ -20,6 +20,9 @@ export const workoutAnalyticsApi = {
     return request.get('/workout-record/list', { params })
   },
   exportRecords(params?: Record<string, unknown>) {
-    return request.get('/workout-record/export', { params, responseType: 'blob' })
+    return request.get<Blob>('/workout-record/export', {
+      params,
+      responseType: 'blob',
+    } as Record<string, unknown>)
   },
 }

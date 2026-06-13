@@ -155,9 +155,7 @@ function handleViewDetail(row: { id: number }) {
 }
 
 async function loadStats() {
-  const res = (await chatMonitorApi.feedbackStats()) as unknown as {
-    data: { totalSessions: number; totalMessages: number; thumbsUp: number; thumbsDown: number }
-  }
+  const res = await chatMonitorApi.feedbackStats()
   Object.assign(stats, res.data)
 }
 

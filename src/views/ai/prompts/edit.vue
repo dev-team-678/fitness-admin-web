@@ -152,9 +152,7 @@ const versions = ref<Version[]>([])
 
 async function loadDetail() {
   if (!route.params.id) return
-  const res = (await promptApi.detail(safeId.value)) as unknown as {
-    data: { name: string; content: string; templateKey: string; version: number; isActive: number }
-  }
+  const res = await promptApi.detail(safeId.value)
   const d = res.data
   form.name = d.name
   form.content = d.content
@@ -165,7 +163,7 @@ async function loadDetail() {
 
 async function loadVersions() {
   if (!route.params.id) return
-  const res = (await promptApi.versions(safeId.value)) as unknown as { data: Version[] }
+  const res = await promptApi.versions(safeId.value)
   versions.value = res.data || []
 }
 
