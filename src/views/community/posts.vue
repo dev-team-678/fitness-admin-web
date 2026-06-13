@@ -225,6 +225,33 @@ onActivated(() => {
     applyHighlight()
   }
 })
+
+async function handleApprove(row: Record<string, unknown>) {
+  try {
+    await ElMessageBox.confirm('确定恢复该帖子为正常状态？', '恢复帖子', { type: 'warning' })
+    await postApi.updateStatus(row.id as number, { status: 1 })
+    ElMessage.success('已恢复')
+    loadData(buildParams())
+  } catch { /* cancelled */ }
+}
+
+async function handleHide(row: Record<string, unknown>) {
+  try {
+    await ElMessageBox.confirm('确定隐藏该帖子？隐藏后用户不可见。', '隐藏帖子', { type: 'warning' })
+    await postApi.updateStatus(row.id as number, { status: 0 })
+    ElMessage.success('已隐藏')
+    loadData(buildParams())
+  } catch { /* cancelled */ }
+}
+
+async function handleDelete(row: Record<string, unknown>) {
+  try {
+    await ElMessageBox.confirm('确定删除该帖子？此操作不可恢复。', '删除帖子', { type: 'error' })
+    await postApi.delete(row.id as number)
+    ElMessage.success('已删除')
+    loadData(buildParams())
+  } catch { /* cancelled */ }
+}
 </script>
 
 <style lang="scss" scoped>

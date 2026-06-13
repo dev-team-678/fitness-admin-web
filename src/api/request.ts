@@ -44,7 +44,7 @@ class HttpClient {
           ElMessage.error(message || '请求失败')
           return Promise.reject(new Error(message))
         }
-        return response.data
+        return response.data as any
       },
       (error) => {
         if (error.response?.status === 401) {
@@ -59,20 +59,20 @@ class HttpClient {
     )
   }
 
-  get<T = unknown>(url: string, config?: Record<string, unknown>): Promise<ApiResponse<T>> {
-    return this.instance.get(url, config)
+  get<T = any>(url: string, config?: Record<string, unknown>): Promise<ApiResponse<T>> {
+    return this.instance.get(url, config) as any
   }
 
-  post<T = unknown>(url: string, data?: unknown, config?: Record<string, unknown>): Promise<ApiResponse<T>> {
-    return this.instance.post(url, data, config)
+  post<T = any>(url: string, data?: unknown, config?: Record<string, unknown>): Promise<ApiResponse<T>> {
+    return this.instance.post(url, data, config) as any
   }
 
-  put<T = unknown>(url: string, data?: unknown, config?: Record<string, unknown>): Promise<ApiResponse<T>> {
-    return this.instance.put(url, data, config)
+  put<T = any>(url: string, data?: unknown, config?: Record<string, unknown>): Promise<ApiResponse<T>> {
+    return this.instance.put(url, data, config) as any
   }
 
-  delete<T = unknown>(url: string, config?: Record<string, unknown>): Promise<ApiResponse<T>> {
-    return this.instance.delete(url, config)
+  delete<T = any>(url: string, config?: Record<string, unknown>): Promise<ApiResponse<T>> {
+    return this.instance.delete(url, config) as any
   }
 }
 

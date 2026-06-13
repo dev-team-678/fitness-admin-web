@@ -388,7 +388,7 @@ async function loadDetail() {
   if (!isEdit.value) return
   try {
     const res = await exerciseApi.detail(safeId.value)
-    const data = (res ?? {}) as { [k: string]: unknown }
+    const data = (res ?? {}) as unknown as { [k: string]: unknown }
 
     // Parse JSON strings to arrays
     let instructions = ['']
@@ -405,7 +405,7 @@ async function loadDetail() {
     } catch { /* ignore */ }
 
     // Extract body part IDs
-    const bodyPartIds = (data.bodyParts || []).map((bp: any) => bp.id)
+    const bodyPartIds = ((data.bodyParts || []) as any[]).map((bp: any) => bp.id)
 
     Object.assign(form, {
       name: data.name || '',

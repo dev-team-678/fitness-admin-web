@@ -200,7 +200,7 @@ async function handleEdit(row: RoleItem) {
       editForm.description = data.description ?? editForm.description
       let nextPerms: string[] = []
       if (typeof data.permissions === 'string' && data.permissions.trim()) {
-        nextPerms = data.permissions.split(',').map((s) => s.trim()).filter(Boolean)
+        nextPerms = data.permissions.split(',').map((s: string) => s.trim()).filter(Boolean)
       } else if (Array.isArray((data as { permissions?: unknown }).permissions)) {
         nextPerms = (data as unknown as { permissions: string[] }).permissions
       }
@@ -227,7 +227,7 @@ async function onDialogOpen() {
 }
 
 // 全选切换
-function handleCheckAllChange(checked: boolean) {
+function handleCheckAllChange(checked: string | number | boolean) {
   if (!treeRef.value) return
   if (checked) {
     treeRef.value.setCheckedKeys(leafNodeIds.value, false)

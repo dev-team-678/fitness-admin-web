@@ -385,7 +385,8 @@ async function handleEditSubmit() {
 async function loadTags() {
   try {
     const res = await userApi.tags()
-    const list = Array.isArray(res) ? res : (res?.list ?? [])
+    const resData = (res as any)?.data
+    const list = Array.isArray(res) ? res : (Array.isArray(resData) ? resData : (resData?.list ?? []))
     allTags.value = list
   } catch {
     // ignore

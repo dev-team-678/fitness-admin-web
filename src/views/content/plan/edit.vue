@@ -510,7 +510,7 @@ async function loadDetail() {
   if (!isEdit.value) return
   try {
     const res = await planApi.detail(safeId.value)
-    const data = res ?? {}
+    const data = (res?.data ?? res ?? {}) as any
     Object.assign(form, {
       name: data.name,
       fitnessLevel: data.difficultyLevel || 'intermediate',
