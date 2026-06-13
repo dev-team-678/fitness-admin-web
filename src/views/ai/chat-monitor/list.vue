@@ -113,7 +113,7 @@ import { useTableSearch } from '@/composables/useTableSearch'
 const route = useRoute()
 const router = useRouter()
 
-const filterUserId = ref<string>(route.query.user_id as string || '')
+const filterUserId = ref<string>(route.query.userId as string || '')
 
 const stats = reactive({
   totalSessions: 0,

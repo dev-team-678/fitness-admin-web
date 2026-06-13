@@ -239,7 +239,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted, watch } from 'vue'
+import { ref, reactive, computed, onMounted, onActivated, onDeactivated, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { ArrowLeft, User, Trophy } from '@element-plus/icons-vue'
@@ -251,6 +251,11 @@ const userId = computed(() => {
   const id = Number(route.params.id)
   return isNaN(id) ? 0 : id
 })
+
+// keep-alive 激活状态标记
+const isActive = ref(true)
+onActivated(() => { isActive.value = true })
+onDeactivated(() => { isActive.value = false })
 
 const pageLoading = ref(false)
 
@@ -317,6 +322,11 @@ function formatArray(value: any): string[] {
 
 // Load data
 async function loadUserDetail() {
+  if (userId.value <= 0) {
+    ElMessage.error('用户ID无效')
+    router.replace('/user/list')
+    return
+  }
   pageLoading.value = true
   try {
     const res = (await userApi.detail(userId.value)) as any
@@ -333,6 +343,7 @@ async function loadStats() {
 }
 
 async function loadAchievements() {
+  if (userId.value <= 0) return
   try {
     const res = (await userApi.getAchievements(userId.value)) as any
     achievements.value = res.data || []
@@ -342,6 +353,7 @@ async function loadAchievements() {
 }
 
 async function loadWorkouts(reset = false) {
+  if (userId.value <= 0) return
   if (reset) {
     workoutPage.value = 1
     workouts.value = []
@@ -365,6 +377,7 @@ function loadMoreWorkouts() {
 }
 
 async function loadAiProfile() {
+  if (userId.value <= 0) return
   try {
     const res = (await userApi.getAiProfile(userId.value)) as any
     aiProfile.value = res.data || null
@@ -374,6 +387,7 @@ async function loadAiProfile() {
 }
 
 async function loadAiChats() {
+  if (userId.value <= 0) return
   try {
     const res = (await userApi.getAiChats(userId.value, { page: 1, pageSize: 5 })) as any
     aiChats.value = res.data?.list || res.data || []
@@ -387,13 +401,18 @@ function viewChat(chatId: number) {
 }
 
 function viewAllChats() {
-  router.push({ path: '/ai/chat-monitor/list', query: { user_id: String(userId.value) } })
+  router.push({ path: '/ai/chat-monitor/list', query: { userId: String(userId.value) } })
 }
 
 // Init
 watch(
   () => route.params.id,
-  async () => {
+  async (newId) => {
+    // 组件已离开（keep-alive deactivated）或路由参数无效时，跳过加载
+    if (!isActive.value) return
+    const id = Number(newId)
+    if (!newId || isNaN(id) || id <= 0) return
+
     await loadUserDetail()
     await Promise.all([
       loadAchievements(),
